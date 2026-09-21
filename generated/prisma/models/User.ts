@@ -20,8 +20,18 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  loginCount: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  loginCount: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -33,6 +43,8 @@ export type UserMinAggregateOutputType = {
   passwordHash: string | null
   role: $Enums.Role | null
   gender: $Enums.Gender | null
+  lastLoginAt: Date | null
+  loginCount: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,6 +58,8 @@ export type UserMaxAggregateOutputType = {
   passwordHash: string | null
   role: $Enums.Role | null
   gender: $Enums.Gender | null
+  lastLoginAt: Date | null
+  loginCount: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -59,11 +73,21 @@ export type UserCountAggregateOutputType = {
   passwordHash: number
   role: number
   gender: number
+  lastLoginAt: number
+  loginCount: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type UserAvgAggregateInputType = {
+  loginCount?: true
+}
+
+export type UserSumAggregateInputType = {
+  loginCount?: true
+}
 
 export type UserMinAggregateInputType = {
   id?: true
@@ -74,6 +98,8 @@ export type UserMinAggregateInputType = {
   passwordHash?: true
   role?: true
   gender?: true
+  lastLoginAt?: true
+  loginCount?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -87,6 +113,8 @@ export type UserMaxAggregateInputType = {
   passwordHash?: true
   role?: true
   gender?: true
+  lastLoginAt?: true
+  loginCount?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +128,8 @@ export type UserCountAggregateInputType = {
   passwordHash?: true
   role?: true
   gender?: true
+  lastLoginAt?: true
+  loginCount?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -143,6 +173,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -173,6 +215,8 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
@@ -186,9 +230,13 @@ export type UserGroupByOutputType = {
   passwordHash: string
   role: $Enums.Role
   gender: $Enums.Gender | null
+  lastLoginAt: Date | null
+  loginCount: number
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -220,6 +268,8 @@ export type UserWhereInput = {
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
   gender?: Prisma.EnumGenderNullableFilter<"User"> | $Enums.Gender | null
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  loginCount?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   supervisesGroup?: Prisma.XOR<Prisma.GroupNullableScalarRelationFilter, Prisma.GroupWhereInput> | null
@@ -246,6 +296,8 @@ export type UserOrderByWithRelationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  loginCount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   supervisesGroup?: Prisma.GroupOrderByWithRelationInput
@@ -275,6 +327,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
   gender?: Prisma.EnumGenderNullableFilter<"User"> | $Enums.Gender | null
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  loginCount?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   supervisesGroup?: Prisma.XOR<Prisma.GroupNullableScalarRelationFilter, Prisma.GroupWhereInput> | null
@@ -301,11 +355,15 @@ export type UserOrderByWithAggregationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  loginCount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -320,6 +378,8 @@ export type UserScalarWhereWithAggregatesInput = {
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
   gender?: Prisma.EnumGenderNullableWithAggregatesFilter<"User"> | $Enums.Gender | null
+  lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  loginCount?: Prisma.IntWithAggregatesFilter<"User"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -333,6 +393,8 @@ export type UserCreateInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -359,6 +421,8 @@ export type UserUncheckedCreateInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -385,6 +449,8 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -411,6 +477,8 @@ export type UserUncheckedUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -437,6 +505,8 @@ export type UserCreateManyInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -450,6 +520,8 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -463,6 +535,8 @@ export type UserUncheckedUpdateManyInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -476,8 +550,14 @@ export type UserCountOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   gender?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  loginCount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  loginCount?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -489,6 +569,8 @@ export type UserMaxOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   gender?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  loginCount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -502,8 +584,14 @@ export type UserMinOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   gender?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
+  loginCount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  loginCount?: Prisma.SortOrder
 }
 
 export type UserNullableScalarRelationFilter = {
@@ -530,6 +618,14 @@ export type EnumRoleFieldUpdateOperationsInput = {
 
 export type NullableEnumGenderFieldUpdateOperationsInput = {
   set?: $Enums.Gender | null
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -731,6 +827,8 @@ export type UserCreateWithoutSupervisesGroupInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   membership?: Prisma.MembershipCreateNestedOneWithoutUserInput
@@ -756,6 +854,8 @@ export type UserUncheckedCreateWithoutSupervisesGroupInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   membership?: Prisma.MembershipUncheckedCreateNestedOneWithoutUserInput
@@ -797,6 +897,8 @@ export type UserUpdateWithoutSupervisesGroupInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membership?: Prisma.MembershipUpdateOneWithoutUserNestedInput
@@ -822,6 +924,8 @@ export type UserUncheckedUpdateWithoutSupervisesGroupInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   membership?: Prisma.MembershipUncheckedUpdateOneWithoutUserNestedInput
@@ -847,6 +951,8 @@ export type UserCreateWithoutMembershipInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -872,6 +978,8 @@ export type UserUncheckedCreateWithoutMembershipInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -913,6 +1021,8 @@ export type UserUpdateWithoutMembershipInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -938,6 +1048,8 @@ export type UserUncheckedUpdateWithoutMembershipInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -963,6 +1075,8 @@ export type UserCreateWithoutSupervisorOfInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -988,6 +1102,8 @@ export type UserUncheckedCreateWithoutSupervisorOfInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1029,6 +1145,8 @@ export type UserUpdateWithoutSupervisorOfInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1054,6 +1172,8 @@ export type UserUncheckedUpdateWithoutSupervisorOfInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1079,6 +1199,8 @@ export type UserCreateWithoutFilesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1104,6 +1226,8 @@ export type UserUncheckedCreateWithoutFilesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1145,6 +1269,8 @@ export type UserUpdateWithoutFilesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1170,6 +1296,8 @@ export type UserUncheckedUpdateWithoutFilesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1195,6 +1323,8 @@ export type UserCreateWithoutAssignmentsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1220,6 +1350,8 @@ export type UserUncheckedCreateWithoutAssignmentsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1261,6 +1393,8 @@ export type UserUpdateWithoutAssignmentsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1286,6 +1420,8 @@ export type UserUncheckedUpdateWithoutAssignmentsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1311,6 +1447,8 @@ export type UserCreateWithoutAnnouncementsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1336,6 +1474,8 @@ export type UserUncheckedCreateWithoutAnnouncementsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1377,6 +1517,8 @@ export type UserUpdateWithoutAnnouncementsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1402,6 +1544,8 @@ export type UserUncheckedUpdateWithoutAnnouncementsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1427,6 +1571,8 @@ export type UserCreateWithoutChatMessagesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1452,6 +1598,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1493,6 +1641,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1518,6 +1668,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1543,6 +1695,8 @@ export type UserCreateWithoutReportsMadeInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1568,6 +1722,8 @@ export type UserUncheckedCreateWithoutReportsMadeInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1598,6 +1754,8 @@ export type UserCreateWithoutReportsHandledInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1623,6 +1781,8 @@ export type UserUncheckedCreateWithoutReportsHandledInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1664,6 +1824,8 @@ export type UserUpdateWithoutReportsMadeInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1689,6 +1851,8 @@ export type UserUncheckedUpdateWithoutReportsMadeInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1725,6 +1889,8 @@ export type UserUpdateWithoutReportsHandledInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1750,6 +1916,8 @@ export type UserUncheckedUpdateWithoutReportsHandledInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1775,6 +1943,8 @@ export type UserCreateWithoutNominatedInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1800,6 +1970,8 @@ export type UserUncheckedCreateWithoutNominatedInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1841,6 +2013,8 @@ export type UserUpdateWithoutNominatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1866,6 +2040,8 @@ export type UserUncheckedUpdateWithoutNominatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -1891,6 +2067,8 @@ export type UserCreateWithoutVotesCastInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -1916,6 +2094,8 @@ export type UserUncheckedCreateWithoutVotesCastInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -1957,6 +2137,8 @@ export type UserUpdateWithoutVotesCastInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -1982,6 +2164,8 @@ export type UserUncheckedUpdateWithoutVotesCastInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -2007,6 +2191,8 @@ export type UserCreateWithoutNotificationsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -2032,6 +2218,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -2073,6 +2261,8 @@ export type UserUpdateWithoutNotificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -2098,6 +2288,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -2123,6 +2315,8 @@ export type UserCreateWithoutEmailCodesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupCreateNestedOneWithoutSupervisorInput
@@ -2148,6 +2342,8 @@ export type UserUncheckedCreateWithoutEmailCodesInput = {
   passwordHash: string
   role?: $Enums.Role
   gender?: $Enums.Gender | null
+  lastLoginAt?: Date | string | null
+  loginCount?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   supervisesGroup?: Prisma.GroupUncheckedCreateNestedOneWithoutSupervisorInput
@@ -2189,6 +2385,8 @@ export type UserUpdateWithoutEmailCodesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUpdateOneWithoutSupervisorNestedInput
@@ -2214,6 +2412,8 @@ export type UserUncheckedUpdateWithoutEmailCodesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  loginCount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   supervisesGroup?: Prisma.GroupUncheckedUpdateOneWithoutSupervisorNestedInput
@@ -2360,6 +2560,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   passwordHash?: boolean
   role?: boolean
   gender?: boolean
+  lastLoginAt?: boolean
+  loginCount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   supervisesGroup?: boolean | Prisma.User$supervisesGroupArgs<ExtArgs>
@@ -2387,6 +2589,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   gender?: boolean
+  lastLoginAt?: boolean
+  loginCount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -2400,6 +2604,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   gender?: boolean
+  lastLoginAt?: boolean
+  loginCount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -2413,11 +2619,13 @@ export type UserSelectScalar = {
   passwordHash?: boolean
   role?: boolean
   gender?: boolean
+  lastLoginAt?: boolean
+  loginCount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "emailVerifiedAt" | "passwordHash" | "role" | "gender" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "emailVerifiedAt" | "passwordHash" | "role" | "gender" | "lastLoginAt" | "loginCount" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   supervisesGroup?: boolean | Prisma.User$supervisesGroupArgs<ExtArgs>
   membership?: boolean | Prisma.User$membershipArgs<ExtArgs>
@@ -2463,6 +2671,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     passwordHash: string
     role: $Enums.Role
     gender: $Enums.Gender | null
+    lastLoginAt: Date | null
+    loginCount: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -2909,6 +3119,8 @@ export interface UserFieldRefs {
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'Role'>
   readonly gender: Prisma.FieldRef<"User", 'Gender'>
+  readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly loginCount: Prisma.FieldRef<"User", 'Int'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

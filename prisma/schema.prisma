@@ -33,6 +33,8 @@ model User {
   passwordHash   String
   role           Role     @default(STUDENT)
   gender         Gender?
+  lastLoginAt    DateTime?
+  loginCount     Int      @default(0)
   supervisesGroup Group?  @relation("GroupSupervisorUser")
 
   membership     Membership?
@@ -150,11 +152,17 @@ model Group {
 // العضوية: الطالب ينتمي لفوج واحد نشط
 model Membership {
   id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  joinedAt  DateTime @default(now())
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime  @default(now())
+
+  // حظر من الدردشة من طرف المشرف (غير قادر على رؤية المحتوى حتى يُلغى الحظر)
+  chatBannedAt DateTime?
+  // رفض عرض المشرف السابق: لا يُطرح عليه العرض مرة أخرى
+  offerDeclined Boolean @default(false)
+  offerDeclinedAt DateTime?
 
   @@index([groupId])
   @@index([userId])

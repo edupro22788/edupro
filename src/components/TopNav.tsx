@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, LogOut, User, Search, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Bell, LogOut, User, Search, LayoutDashboard, Menu, X, Users } from 'lucide-react';
 import { apiPost } from '@/lib/client';
 
 type Me = {
@@ -29,6 +29,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/room/schedule': 'الجدول الأسبوعي',
   '/room/announcements': 'المواضيع المهمة',
   '/room/chat': 'الدردشة العامة',
+  '/room/members': 'الأعضاء',
   '/notifications': 'الإشعارات',
   '/search': 'البحث',
   '/profile': 'الملف الشخصي',
@@ -123,11 +124,7 @@ export default function TopNav() {
               <Link href="/room" className="btn btn-ghost px-3 py-2 text-sm">الرئيسية</Link>
               <Link href="/room/subjects" className="btn btn-ghost px-3 py-2 text-sm">المقاييس</Link>
               <Link href="/room/chat" className="btn btn-ghost px-3 py-2 text-sm">الدردشة</Link>
-              <Link href="/search" className="btn btn-ghost px-3 py-2 text-sm"><Search size={16} /></Link>
             </>
-          )}
-          {inLanding || inAuthPage ? null : (
-            <Link href="/search" className="btn btn-ghost p-2 md:hidden"><Search size={18} /></Link>
           )}
         </div>
 
@@ -151,9 +148,11 @@ export default function TopNav() {
           <Link href="/room" className="btn">الرئيسية</Link>
           <Link href="/room/subjects" className="btn">المقاييس</Link>
           <Link href="/room/chat" className="btn">الدردشة</Link>
+          <Link href="/room/members" className="btn"><Users size={16} /> الأعضاء</Link>
           <Link href="/search" className="btn"><Search size={16} /> البحث</Link>
           <Link href="/notifications" className="btn"><Bell size={16} /> الإشعارات</Link>
           <Link href="/profile" className="btn"><User size={16} /> ملفي</Link>
+          <button className="btn" onClick={logout}><LogOut size={16} style={{ color: '#ff9b94' }} /> تسجيل الخروج</button>
         </div>
       )}
     </header>

@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
-import { requireApiGroupMember, ok, apiError, ApiGuardError } from '@/lib/api-helpers';
+import {
+  requireApiGroupMember, ok, apiError, ApiGuardError, isApiSupervisor,
+} from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { notifyGroup } from '@/lib/notifications';
 import { SUBJECT_ICONS } from '@/lib/constants';
@@ -21,6 +23,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
+  if (!isApiSupervisor(user)) return apiError('فقط مشرف الفوج يمكنه إضافة المقاييس', 403);
 
   const body = await req.json().catch(() => ({}));
   const name = String(body?.name || '').trim();

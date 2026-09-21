@@ -339,14 +339,6 @@ export type StateScalarRelationFilter = {
   isNot?: Prisma.StateWhereInput
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type StateCreateNestedOneWithoutUniversitiesInput = {
   create?: Prisma.XOR<Prisma.StateCreateWithoutUniversitiesInput, Prisma.StateUncheckedCreateWithoutUniversitiesInput>
   connectOrCreate?: Prisma.StateCreateOrConnectWithoutUniversitiesInput

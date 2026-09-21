@@ -2036,6 +2036,8 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   gender: 'gender',
+  lastLoginAt: 'lastLoginAt',
+  loginCount: 'loginCount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -2109,7 +2111,10 @@ export const MembershipScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   groupId: 'groupId',
-  joinedAt: 'joinedAt'
+  joinedAt: 'joinedAt',
+  chatBannedAt: 'chatBannedAt',
+  offerDeclined: 'offerDeclined',
+  offerDeclinedAt: 'offerDeclinedAt'
 } as const
 
 export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]

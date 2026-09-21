@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, ClipboardList, MessagesSquare, CalendarDays, Pin, Bell, Search, User } from 'lucide-react';
+import { Home, BookOpen, ClipboardList, MessagesSquare, CalendarDays, Pin, Bell, Search, User, Users } from 'lucide-react';
 
 const items = [
   { href: '/room', label: 'الرئيسية', icon: Home },
@@ -11,6 +11,7 @@ const items = [
   { href: '/room/chat', label: 'الدردشة العامة', icon: MessagesSquare },
   { href: '/room/schedule', label: 'الجدول الأسبوعي', icon: CalendarDays },
   { href: '/room/announcements', label: 'المواضيع المهمة', icon: Pin },
+  { href: '/room/members', label: 'الأعضاء', icon: Users },
   { href: '/notifications', label: 'الإشعارات', icon: Bell },
   { href: '/search', label: 'البحث', icon: Search },
   { href: '/profile', label: 'ملفي', icon: User },

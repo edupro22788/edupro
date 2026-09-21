@@ -29,6 +29,9 @@ export type MembershipMinAggregateOutputType = {
   userId: string | null
   groupId: string | null
   joinedAt: Date | null
+  chatBannedAt: Date | null
+  offerDeclined: boolean | null
+  offerDeclinedAt: Date | null
 }
 
 export type MembershipMaxAggregateOutputType = {
@@ -36,6 +39,9 @@ export type MembershipMaxAggregateOutputType = {
   userId: string | null
   groupId: string | null
   joinedAt: Date | null
+  chatBannedAt: Date | null
+  offerDeclined: boolean | null
+  offerDeclinedAt: Date | null
 }
 
 export type MembershipCountAggregateOutputType = {
@@ -43,6 +49,9 @@ export type MembershipCountAggregateOutputType = {
   userId: number
   groupId: number
   joinedAt: number
+  chatBannedAt: number
+  offerDeclined: number
+  offerDeclinedAt: number
   _all: number
 }
 
@@ -52,6 +61,9 @@ export type MembershipMinAggregateInputType = {
   userId?: true
   groupId?: true
   joinedAt?: true
+  chatBannedAt?: true
+  offerDeclined?: true
+  offerDeclinedAt?: true
 }
 
 export type MembershipMaxAggregateInputType = {
@@ -59,6 +71,9 @@ export type MembershipMaxAggregateInputType = {
   userId?: true
   groupId?: true
   joinedAt?: true
+  chatBannedAt?: true
+  offerDeclined?: true
+  offerDeclinedAt?: true
 }
 
 export type MembershipCountAggregateInputType = {
@@ -66,6 +81,9 @@ export type MembershipCountAggregateInputType = {
   userId?: true
   groupId?: true
   joinedAt?: true
+  chatBannedAt?: true
+  offerDeclined?: true
+  offerDeclinedAt?: true
   _all?: true
 }
 
@@ -146,6 +164,9 @@ export type MembershipGroupByOutputType = {
   userId: string
   groupId: string
   joinedAt: Date
+  chatBannedAt: Date | null
+  offerDeclined: boolean
+  offerDeclinedAt: Date | null
   _count: MembershipCountAggregateOutputType | null
   _min: MembershipMinAggregateOutputType | null
   _max: MembershipMaxAggregateOutputType | null
@@ -174,6 +195,9 @@ export type MembershipWhereInput = {
   userId?: Prisma.StringFilter<"Membership"> | string
   groupId?: Prisma.StringFilter<"Membership"> | string
   joinedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
+  chatBannedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
+  offerDeclined?: Prisma.BoolFilter<"Membership"> | boolean
+  offerDeclinedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   group?: Prisma.XOR<Prisma.GroupScalarRelationFilter, Prisma.GroupWhereInput>
 }
@@ -183,6 +207,9 @@ export type MembershipOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   joinedAt?: Prisma.SortOrder
+  chatBannedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  offerDeclined?: Prisma.SortOrder
+  offerDeclinedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   group?: Prisma.GroupOrderByWithRelationInput
 }
@@ -195,6 +222,9 @@ export type MembershipWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MembershipWhereInput | Prisma.MembershipWhereInput[]
   groupId?: Prisma.StringFilter<"Membership"> | string
   joinedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
+  chatBannedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
+  offerDeclined?: Prisma.BoolFilter<"Membership"> | boolean
+  offerDeclinedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   group?: Prisma.XOR<Prisma.GroupScalarRelationFilter, Prisma.GroupWhereInput>
 }, "id" | "userId">
@@ -204,6 +234,9 @@ export type MembershipOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   joinedAt?: Prisma.SortOrder
+  chatBannedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  offerDeclined?: Prisma.SortOrder
+  offerDeclinedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.MembershipCountOrderByAggregateInput
   _max?: Prisma.MembershipMaxOrderByAggregateInput
   _min?: Prisma.MembershipMinOrderByAggregateInput
@@ -217,11 +250,17 @@ export type MembershipScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"Membership"> | string
   groupId?: Prisma.StringWithAggregatesFilter<"Membership"> | string
   joinedAt?: Prisma.DateTimeWithAggregatesFilter<"Membership"> | Date | string
+  chatBannedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Membership"> | Date | string | null
+  offerDeclined?: Prisma.BoolWithAggregatesFilter<"Membership"> | boolean
+  offerDeclinedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Membership"> | Date | string | null
 }
 
 export type MembershipCreateInput = {
   id?: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutMembershipInput
   group: Prisma.GroupCreateNestedOneWithoutMembershipsInput
 }
@@ -231,11 +270,17 @@ export type MembershipUncheckedCreateInput = {
   userId: string
   groupId: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
 }
 
 export type MembershipUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutMembershipNestedInput
   group?: Prisma.GroupUpdateOneRequiredWithoutMembershipsNestedInput
 }
@@ -245,6 +290,9 @@ export type MembershipUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   groupId?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MembershipCreateManyInput = {
@@ -252,11 +300,17 @@ export type MembershipCreateManyInput = {
   userId: string
   groupId: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
 }
 
 export type MembershipUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MembershipUncheckedUpdateManyInput = {
@@ -264,6 +318,9 @@ export type MembershipUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   groupId?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MembershipNullableScalarRelationFilter = {
@@ -286,6 +343,9 @@ export type MembershipCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   joinedAt?: Prisma.SortOrder
+  chatBannedAt?: Prisma.SortOrder
+  offerDeclined?: Prisma.SortOrder
+  offerDeclinedAt?: Prisma.SortOrder
 }
 
 export type MembershipMaxOrderByAggregateInput = {
@@ -293,6 +353,9 @@ export type MembershipMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   joinedAt?: Prisma.SortOrder
+  chatBannedAt?: Prisma.SortOrder
+  offerDeclined?: Prisma.SortOrder
+  offerDeclinedAt?: Prisma.SortOrder
 }
 
 export type MembershipMinOrderByAggregateInput = {
@@ -300,6 +363,9 @@ export type MembershipMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   groupId?: Prisma.SortOrder
   joinedAt?: Prisma.SortOrder
+  chatBannedAt?: Prisma.SortOrder
+  offerDeclined?: Prisma.SortOrder
+  offerDeclinedAt?: Prisma.SortOrder
 }
 
 export type MembershipCreateNestedOneWithoutUserInput = {
@@ -376,9 +442,16 @@ export type MembershipUncheckedUpdateManyWithoutGroupNestedInput = {
   deleteMany?: Prisma.MembershipScalarWhereInput | Prisma.MembershipScalarWhereInput[]
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type MembershipCreateWithoutUserInput = {
   id?: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
   group: Prisma.GroupCreateNestedOneWithoutMembershipsInput
 }
 
@@ -386,6 +459,9 @@ export type MembershipUncheckedCreateWithoutUserInput = {
   id?: string
   groupId: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
 }
 
 export type MembershipCreateOrConnectWithoutUserInput = {
@@ -407,6 +483,9 @@ export type MembershipUpdateToOneWithWhereWithoutUserInput = {
 export type MembershipUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   group?: Prisma.GroupUpdateOneRequiredWithoutMembershipsNestedInput
 }
 
@@ -414,11 +493,17 @@ export type MembershipUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   groupId?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MembershipCreateWithoutGroupInput = {
   id?: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutMembershipInput
 }
 
@@ -426,6 +511,9 @@ export type MembershipUncheckedCreateWithoutGroupInput = {
   id?: string
   userId: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
 }
 
 export type MembershipCreateOrConnectWithoutGroupInput = {
@@ -461,17 +549,26 @@ export type MembershipScalarWhereInput = {
   userId?: Prisma.StringFilter<"Membership"> | string
   groupId?: Prisma.StringFilter<"Membership"> | string
   joinedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
+  chatBannedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
+  offerDeclined?: Prisma.BoolFilter<"Membership"> | boolean
+  offerDeclinedAt?: Prisma.DateTimeNullableFilter<"Membership"> | Date | string | null
 }
 
 export type MembershipCreateManyGroupInput = {
   id?: string
   userId: string
   joinedAt?: Date | string
+  chatBannedAt?: Date | string | null
+  offerDeclined?: boolean
+  offerDeclinedAt?: Date | string | null
 }
 
 export type MembershipUpdateWithoutGroupInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutMembershipNestedInput
 }
 
@@ -479,12 +576,18 @@ export type MembershipUncheckedUpdateWithoutGroupInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MembershipUncheckedUpdateManyWithoutGroupInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chatBannedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  offerDeclined?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  offerDeclinedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -494,6 +597,9 @@ export type MembershipSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   userId?: boolean
   groupId?: boolean
   joinedAt?: boolean
+  chatBannedAt?: boolean
+  offerDeclined?: boolean
+  offerDeclinedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   group?: boolean | Prisma.GroupDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["membership"]>
@@ -503,6 +609,9 @@ export type MembershipSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   userId?: boolean
   groupId?: boolean
   joinedAt?: boolean
+  chatBannedAt?: boolean
+  offerDeclined?: boolean
+  offerDeclinedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   group?: boolean | Prisma.GroupDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["membership"]>
@@ -512,6 +621,9 @@ export type MembershipSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   userId?: boolean
   groupId?: boolean
   joinedAt?: boolean
+  chatBannedAt?: boolean
+  offerDeclined?: boolean
+  offerDeclinedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   group?: boolean | Prisma.GroupDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["membership"]>
@@ -521,9 +633,12 @@ export type MembershipSelectScalar = {
   userId?: boolean
   groupId?: boolean
   joinedAt?: boolean
+  chatBannedAt?: boolean
+  offerDeclined?: boolean
+  offerDeclinedAt?: boolean
 }
 
-export type MembershipOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "groupId" | "joinedAt", ExtArgs["result"]["membership"]>
+export type MembershipOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "groupId" | "joinedAt" | "chatBannedAt" | "offerDeclined" | "offerDeclinedAt", ExtArgs["result"]["membership"]>
 export type MembershipInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   group?: boolean | Prisma.GroupDefaultArgs<ExtArgs>
@@ -548,6 +663,9 @@ export type $MembershipPayload<ExtArgs extends runtime.Types.Extensions.Internal
     userId: string
     groupId: string
     joinedAt: Date
+    chatBannedAt: Date | null
+    offerDeclined: boolean
+    offerDeclinedAt: Date | null
   }, ExtArgs["result"]["membership"]>
   composites: {}
 }
@@ -977,6 +1095,9 @@ export interface MembershipFieldRefs {
   readonly userId: Prisma.FieldRef<"Membership", 'String'>
   readonly groupId: Prisma.FieldRef<"Membership", 'String'>
   readonly joinedAt: Prisma.FieldRef<"Membership", 'DateTime'>
+  readonly chatBannedAt: Prisma.FieldRef<"Membership", 'DateTime'>
+  readonly offerDeclined: Prisma.FieldRef<"Membership", 'Boolean'>
+  readonly offerDeclinedAt: Prisma.FieldRef<"Membership", 'DateTime'>
 }
     
 

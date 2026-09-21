@@ -25,6 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
+  if (!isApiSupervisor(user)) return apiError('فقط مشرف الفوج يمكنه نشر الواجبات', 403);
 
   const form = await req.formData().catch(() => null);
   if (!form) return apiError('طلب غير صالح');
@@ -80,16 +81,14 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (isApiSupervisor(user)) {
-    await notifyGroup({
-      groupId,
-      type: 'ASSIGNMENT_ADDED',
-      title: 'واجب جديد 📝',
-      body: `نشر المشرف واجبًا: ${title}`,
-      link: '/room/assignments',
-      excludeUserId: user.id,
-    });
-  }
+  await notifyGroup({
+    groupId,
+    type: 'ASSIGNMENT_ADDED',
+    title: 'واجب جديد 📝',
+    body: `نشر المشرف واجبًا: ${title}`,
+    link: '/room/assignments',
+    excludeUserId: user.id,
+  });
 
   return ok({ assignment });
 }

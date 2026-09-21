@@ -472,10 +472,6 @@ export type SubjectUncheckedUpdateManyWithoutGroupNestedInput = {
   deleteMany?: Prisma.SubjectScalarWhereInput | Prisma.SubjectScalarWhereInput[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type SubjectCreateNestedOneWithoutFilesInput = {
   create?: Prisma.XOR<Prisma.SubjectCreateWithoutFilesInput, Prisma.SubjectUncheckedCreateWithoutFilesInput>
   connectOrCreate?: Prisma.SubjectCreateOrConnectWithoutFilesInput

@@ -1,32 +1,42 @@
 import { NextRequest } from 'next/server';
 import {
-  requireApiGroupMember, ok, apiError, ApiGuardError, isApiSupervisor,
+  requireApiGroupMember, ok, apiError, ApiGuardError,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { processChatUpload, ChatUploadError, chatUploadStatus } from '@/lib/chat-files';
 import { containsOffensive } from '@/lib/moderation';
+import { getSupervisorOfferCtx } from '@/lib/supervisor';
 
 export async function GET(req: NextRequest) {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
 
   const groupId = user.membership!.groupId;
+  const banned = Boolean(user.membership!.chatBannedAt);
+  const supervisorCtx = await getSupervisorOfferCtx(user);
+
   const beforeRaw = req.nextUrl.searchParams.get('before');
   const before = beforeRaw && !Number.isNaN(Date.parse(beforeRaw)) ? new Date(beforeRaw) : undefined;
 
-  const messages = await prisma.chatMessage.findMany({
-    where: { groupId, status: 'ACTIVE', ...(before ? { createdAt: { lt: before } } : {}) },
-    orderBy: { createdAt: 'desc' },
-    take: 60,
-    include: {
-      sender: { select: { id: true, firstName: true, lastName: true, gender: true } },
-      fileRef: {
-        select: { id: true, title: true, fileName: true, mimeType: true, sizeBytes: true, status: true },
-      },
-    },
-  });
+  const messages = banned
+    ? []
+    : await prisma.chatMessage.findMany({
+        where: { groupId, status: 'ACTIVE', ...(before ? { createdAt: { lt: before } } : {}) },
+        orderBy: { createdAt: 'desc' },
+        take: 60,
+        include: {
+          sender: { select: { id: true, firstName: true, lastName: true, gender: true } },
+          fileRef: {
+            select: { id: true, title: true, fileName: true, mimeType: true, sizeBytes: true, status: true },
+          },
+        },
+      });
 
   return ok({
+    banned,
+    amSupervisor: supervisorCtx.amSupervisor,
+    supervisor: supervisorCtx.supervisor,
+    supervisorOffer: supervisorCtx.offer,
     messages: messages
       .reverse()
       .map((m) => ({
@@ -45,7 +55,7 @@ export async function GET(req: NextRequest) {
             }
           : null,
         me: m.senderId === user.id,
-        canDelete: m.senderId === user.id || isApiSupervisor(user),
+        canDelete: m.senderId === user.id || supervisorCtx.amSupervisor,
       })),
   });
 }
@@ -53,6 +63,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
+
+  if (user.membership!.chatBannedAt) {
+    return apiError('أنت محظور من الدردشة من قبل المشرف', 403);
+  }
 
   const contentType = req.headers.get('content-type') || '';
   const groupId = user.membership!.groupId;

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { User, LogOut } from 'lucide-react';
 import TopNav from '@/components/TopNav';
-import { apiGet } from '@/lib/client';
+import { apiGet, apiPost } from '@/lib/client';
 import { Spinner, GenderDot, SupervisorBadge } from '@/components/ui';
 
 type Me = {
@@ -21,9 +22,11 @@ type Room = {
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -41,6 +44,13 @@ export default function ProfilePage() {
   if (!me) return null;
 
   const joined = new Date(me.user.createdAt).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const logout = async () => {
+    setBusy(true);
+    await apiPost('/api/auth/logout');
+    router.push('/login');
+    router.refresh();
+  };
 
   const rows = [
     ['البريد الإلكتروني', me.user.email],
@@ -95,6 +105,9 @@ export default function ProfilePage() {
         <Link href="/" className="btn btn-ghost w-full mt-3">
           <User size={16} /> العودة إلى الصفحة الرئيسية
         </Link>
+        <button className="btn w-full mt-3" style={{ color: '#ff9b94' }} onClick={logout} disabled={busy}>
+          {busy ? <Spinner size={16} /> : <LogOut size={16} />} تسجيل الخروج
+        </button>
       </div>
     </>
   );

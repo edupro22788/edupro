@@ -1,10 +1,13 @@
 import { requireApiGroupMember, ok, ApiGuardError } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { ensureSupervisorFreshness } from '@/lib/supervisor';
 
 export async function GET() {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
   const groupId = user.membership!.groupId;
+
+  await ensureSupervisorFreshness(groupId);
 
   const [group, subjects, files, assignments, announcements, schedule, messages, election, unread, isSup] =
     await Promise.all([

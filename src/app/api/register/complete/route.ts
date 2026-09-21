@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { getApiUser, ok, apiError } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { notifyGroup } from '@/lib/notifications';
+import { normalizeGroupName } from '@/lib/group-name';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       groupIdFinal = group.id;
     } else {
       if (!studyLevelId) return apiError('حدد المستوى الدراسي', 400);
-      const name = newGroupName || 'الفوج 01';
+      const name = normalizeGroupName(newGroupName) || 'الفوج 01';
       const level = await prisma.studyLevel.findUnique({ where: { id: studyLevelId } });
       if (!level) return apiError('المستوى غير موجود', 404);
       const group = await prisma.group.upsert({

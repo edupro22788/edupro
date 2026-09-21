@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireApiAdmin, ok, apiError, ApiGuardError } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { normalizeGroupName } from '@/lib/group-name';
 
 export async function GET(req: NextRequest) {
   let admin = await requireApiAdmin().catch((e: unknown) => e as ApiGuardError);
@@ -119,7 +120,14 @@ export async function POST(req: NextRequest) {
 
     if (kind === 'group') {
       if (!body.levelId) return apiError('مطلوب معرّف المستوى');
-      const node = await prisma.group.create({ data: { name, studyLevelId: body.levelId } });
+      const level = await prisma.studyLevel.findUnique({ where: { id: body.levelId } });
+      if (!level) return apiError('المستوى غير موجود', 404);
+      const gName = normalizeGroupName(name);
+      const node = await prisma.group.upsert({
+        where: { studyLevelId_name: { studyLevelId: body.levelId, name: gName } },
+        update: {},
+        create: { name: gName, studyLevelId: body.levelId },
+      });
       return ok({ node });
     }
 

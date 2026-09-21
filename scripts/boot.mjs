@@ -7,3 +7,9 @@ try {
 } catch (e) {
   console.warn('[boot] seed skipped:', e.message || e);
 }
+
+try {
+  execSync('node node_modules/tsx/dist/cli.mjs scripts/migrate-groups.ts', { stdio: 'inherit' });
+} catch (e) {
+  console.warn('[boot] migrate skipped:', e.message || e);
+}

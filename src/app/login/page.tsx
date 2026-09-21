@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,8 +29,6 @@ export default function LoginPage() {
       }
       if (data.user.role === 'ADMIN') {
         router.push('/admin');
-      } else if (!data.user.emailVerified) {
-        router.push('/verify');
       } else if (!data.user.hasGroup) {
         router.push('/onboarding');
       } else {
@@ -76,8 +73,6 @@ export default function LoginPage() {
         </Link>
       </p>
       <Link href="/" className="text-xs text-[var(--muted)]/60 mt-2">العودة إلى الرئيسية</Link>
-
-      <NextArrow href="/register" />
     </div>
   );
 }

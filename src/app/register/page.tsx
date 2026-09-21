@@ -1,152 +1,198 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Copy, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LEVELS = ['ليسانس 1', 'ليسانس 2', 'ليسانس 3', 'ماستر 1', 'ماستر 2'];
 
-const steps = ['بياناتك', 'رمز التحقق', 'أنت جاهز'];
+type Item = { id: string; name: string; members?: number };
+type Step = 'data' | 'institution' | 'level' | 'branch' | 'group';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<Step>('data');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [okMsg, setOkMsg] = useState('');
 
+  // البيانات الشخصية
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
-  const [testCode, setTestCode] = useState('');
-  const [started, setStarted] = useState(false);
-  const [copied, setCopied] = useState<'email' | 'code' | null>(null);
+  const [confirm, setConfirm] = useState('');
 
-  const emailValid = EMAIL_RE.test(email.trim());
+  // المؤسسة
+  const [states, setStates] = useState<Item[]>([]);
+  const [universities, setUniversities] = useState<Item[]>([]);
+  const [faculties, setFaculties] = useState<Item[]>([]);
+  const [stateId, setStateId] = useState('');
+  const [universityId, setUniversityId] = useState('');
+  const [facultyId, setFacultyId] = useState('');
 
-  const next = () => {
-    if (!started) return setStarted(true);
-    if (step === 0) return setStep(1);
-    if (step === 1) return setStep(2);
-    if (step === 2) return router.push('/onboarding');
-  };
+  // المستوى
+  const [levelName, setLevelName] = useState('');
 
-  const copy = async (what: 'email' | 'code') => {
-    try {
-      await navigator.clipboard.writeText(what === 'email' ? email.trim() : testCode);
-      setCopied(what);
-      setTimeout(() => setCopied(null), 1600);
-    } catch {
-      /* تجاهل */
-    }
-  };
+  // الفرع
+  const [majors, setMajors] = useState<Item[]>([]);
+  const [majorId, setMajorId] = useState('');
 
-  /** الخطوة الأولى: حفظ البيانات ثم إرسال الرمز إلى البريد */
+  // الفوج
+  const [studyLevelId, setStudyLevelId] = useState('');
+  const [groups, setGroups] = useState<Item[]>([]);
+  const [groupId, setGroupId] = useState('');
+  const [newGroupName, setNewGroupName] = useState('');
+
+  const [createdEmail, setCreatedEmail] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const r = await fetch('/api/states');
+      const d = await r.json();
+      if (d.states) setStates(d.states);
+    })();
+  }, []);
+
   const submitData = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailValid) {
-      setError('اكتب بريدك الإلكتروني الجامعي أولًا (مثال: you@example.dz)');
-      return;
-    }
-    setBusy(true); setError(''); setOkMsg('');
+    setError('');
+    if (!firstName.trim() || !lastName.trim()) { setError('أدخل الاسم الأول والاسم الأخير'); return; }
+    if (!EMAIL_RE.test(email.trim())) { setError('اكتب بريدًا إلكترونيًا صحيحًا (مثال: you@example.dz)'); return; }
+    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (password !== confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
+
+    setBusy(true);
     try {
-      const r1 = await fetch('/api/auth/register/step1', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, password }),
-      });
-      const d1 = await r1.json();
-      if (!r1.ok) { setError(d1.error); return; }
+      if (createdEmail !== email.trim()) {
+        const r1 = await fetch('/api/auth/register/step1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstName, lastName, password }),
+        });
+        const d1 = await r1.json();
+        if (!r1.ok) { setError(d1.error); return; }
 
-      const r2 = await fetch('/api/auth/register/step2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const d2 = await r2.json();
-      if (!r2.ok) { setError(d2.error); return; }
-
-      if (d2.testCode) setTestCode(d2.testCode);
-      setStep(1);
+        const r2 = await fetch('/api/auth/register/step2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        });
+        const d2 = await r2.json();
+        if (!r2.ok) { setError(d2.error); return; }
+        setCreatedEmail(email.trim());
+      }
+      setStep('institution');
     } finally { setBusy(false); }
   };
 
-  const resend = async () => {
-    setBusy(true); setError(''); setOkMsg('');
+  const pickState = async (id: string) => {
+    setStateId(id); setUniversityId(''); setFacultyId('');
+    setUniversities([]); setFaculties([]);
+    const r = await fetch(`/api/universities?stateId=${id}`);
+    const d = await r.json();
+    if (d.universities) setUniversities(d.universities);
+  };
+
+  const pickUniversity = async (id: string) => {
+    setUniversityId(id); setFacultyId('');
+    setFaculties([]);
+    const r = await fetch(`/api/faculties?universityId=${id}`);
+    const d = await r.json();
+    if (d.faculties) setFaculties(d.faculties);
+  };
+
+  const goBranch = async () => {
+    setBusy(true); setError('');
+    setMajorId(''); setStudyLevelId(''); setGroups([]); setGroupId(''); setNewGroupName('');
     try {
-      const res = await fetch('/api/auth/register/resend', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error); return; }
-      if (data.testCode) setTestCode(data.testCode);
-      setOkMsg('أُعيد إرسال الرمز إلى بريدك');
+      const r = await fetch(`/api/majors?facultyId=${facultyId}`);
+      const d = await r.json();
+      setMajors(d.majors || []);
+      setStep('branch');
     } finally { setBusy(false); }
   };
 
-  const verify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true); setError(''); setOkMsg('');
+  const pickBranch = async (id: string) => {
+    setMajorId(id); setStudyLevelId(''); setGroups([]); setGroupId(''); setNewGroupName(''); setError('');
+    if (!id) return;
+    const r = await fetch(`/api/levels?majorId=${id}`);
+    const d = await r.json();
+    const lv = (d.levels || []).find((l: Item) => l.name === levelName);
+    if (!lv) { setError('هذا الفرع غير متاح في المستوى المختار'); return; }
+    setStudyLevelId(lv.id);
+    const g = await fetch(`/api/groups?levelId=${lv.id}`);
+    const gd = await g.json();
+    setGroups(gd.groups || []);
+  };
+
+  const complete = async () => {
+    setBusy(true); setError('');
+    const body: Record<string, string> = groupId
+      ? { groupId }
+      : { studyLevelId, newGroupName: (newGroupName || 'الفوج 01').trim() };
     try {
-      const res = await fetch('/api/auth/register/verify', {
+      const r = await fetch('/api/register/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error); return; }
-      setStep(2);
+      const d = await r.json();
+      if (!r.ok) { setError(d.error); return; }
+      router.push('/room?reserved=1');
+      router.refresh();
     } finally { setBusy(false); }
   };
+
+  const back = () => {
+    if (step === 'institution') setStep('data');
+    else if (step === 'level') setStep('institution');
+    else if (step === 'branch') setStep('level');
+    else if (step === 'group') setStep('branch');
+  };
+
+  const STEPS: Step[] = ['data', 'institution', 'level', 'branch', 'group'];
+  const stepsLabel: Record<Step, string> = {
+    data: 'بياناتك',
+    institution: 'مؤسستك',
+    level: 'مستواك',
+    branch: 'فرعك',
+    group: 'فوجك',
+  };
+
+  const goldStyle = { border: '1px solid var(--gold)', background: 'rgba(201,169,98,.12)', color: 'var(--gold)' };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4" dir="rtl">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      dir="rtl"
+      style={{
+        backgroundImage: "linear-gradient(rgba(58,36,71,.82), rgba(58,36,71,.9)), url('/university.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <div className="mb-8 text-center fade-up">
-        <h1 className="text-2xl font-black mt-4">{started ? 'أنشئ حسابك' : 'أهلًا بك في EDU PRO'}</h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          {started ? 'بضع خطوات وتدخل فوجك الرقمي' : 'فوجك الجامعي الرقمي — مقيّسات، واجبات، جدول ودردشة'}
-        </p>
-      </div>
+        <h1 className="text-2xl font-black mt-4">أنشئ حسابك</h1>
+        <p className="text-sm text-[var(--muted)] mt-1">بضع خطوات وتدخل فوجك الجامعي الرقمي</p>
 
-      {/* ===== شاشة البداية قبل التسجيل ===== */}
-      {!started && (
-        <div className="card w-full max-w-sm p-7 text-center fade-up">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-3xl"
-            style={{ background: 'linear-gradient(135deg,#e8c87a,#b8934a)', color: '#13140f' }}>🎓</div>
-          <h2 className="text-xl font-black">ابدأ رحلتك الجامعية</h2>
-          <p className="text-sm text-[var(--muted)] mt-2 leading-relaxed">
-            أنشئ حسابك، اختر ولايتك وجامعتك، وادخل فوجك:
-            حمّل المقيّسات، سلّم الواجبات، تابِع الجدول وتواصل مع زملائك.
-          </p>
-          <button type="button" className="btn btn-gold w-full mt-5 py-3" onClick={() => setStarted(true)}>
-            ابدأ التسجيل الآن
-          </button>
-          <p className="text-sm text-[var(--muted)] mt-5">
-            لديك حساب؟{' '}
-            <Link href="/login" className="font-bold" style={{ color: 'var(--gold)' }}>سجل الدخول</Link>
-          </p>
-        </div>
-      )}
-
-      {/* مؤشر الخطوات */}
-      {started && (
-        <div className="flex items-center gap-2.5 mb-6">
-          {steps.map((s, i) => (
-            <div key={s} className="flex items-center gap-2.5">
-              <div className={`w-2.5 h-2.5 rounded-full transition-all ${i <= step ? '' : 'opacity-30'}`}
-                style={{ background: i <= step ? 'linear-gradient(135deg,#e8c87a,#b8934a)' : 'rgba(15,12,5,.12)' }} />
-              {i < steps.length - 1 && <span className="w-7 h-px bg-[var(--line)]" />}
+        <div className="flex items-center justify-center gap-2 mt-5">
+          {STEPS.map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full transition-all ${s === step ? '' : 'opacity-30'}`}
+                style={{ background: s === step ? 'linear-gradient(135deg,#e8c87a,#b8934a)' : 'rgba(15,12,5,.12)' }} />
+              {i < STEPS.length - 1 && <span className="w-5 h-px bg-[var(--line)]" />}
             </div>
           ))}
-          <span className="text-xs font-bold mr-1" style={{ color: 'var(--gold)' }}>{steps[step]}</span>
+          <span className="text-xs font-bold mr-1" style={{ color: 'var(--gold)' }}>{stepsLabel[step]}</span>
         </div>
-      )}
+      </div>
 
-      {/* ===== الخطوة 1: البيانات + البريد ===== */}
-      {started && step === 0 && (
+      {error && <div className="text-sm mb-4 rounded-xl p-3 w-full max-w-sm" style={{ background: 'rgba(228,87,87,.12)', color: '#ff9b94' }}>{error}</div>}
+
+      {step === 'data' && (
         <form onSubmit={submitData} className="card w-full max-w-sm p-6 fade-up">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -168,86 +214,148 @@ export default function RegisterPage() {
             <input className="input" type="password" dir="ltr" value={password} required minLength={6}
               onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
+          <div className="mt-4">
+            <label className="label">تأكيد كلمة المرور</label>
+            <input className="input" type="password" dir="ltr" value={confirm} required
+              onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" />
+          </div>
 
           <button type="submit" className="btn btn-gold w-full mt-5 py-2.5" disabled={busy}>
-            {busy ? <Spinner /> : 'إرسال رمز التحقق'}
+            {busy ? <Spinner /> : 'متابعة'}
           </button>
-
-          {error && <div className="text-sm mt-3 rounded-xl p-3" style={{ background: 'rgba(228,87,87,.12)', color: '#ff9b94' }}>{error}</div>}
         </form>
       )}
 
-      {/* ===== الخطوة 2: رمز التحقق ===== */}
-      {started && step === 1 && (
-        <form onSubmit={verify} className="card w-full max-w-sm p-6 fade-up">
-          <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(201,169,98,.1)', border: '1px solid rgba(201,169,98,.35)' }}>
-            رمز التحقق الخاص بك (وضع تجريبي — لا يُرسل بريد فعلي)
-            <div className="flex items-center justify-between gap-2 mt-1">
-              <div className="font-bold break-all" style={{ color: 'var(--gold)' }} dir="ltr">{email}</div>
-              <button type="button" onClick={() => copy('email')} className="btn btn-ghost p-1.5 shrink-0"
-                title="نسخ البريد">
-                {copied === 'email' ? <Check size={15} style={{ color: 'var(--ok)' }} /> : <Copy size={15} style={{ color: 'var(--gold)' }} />}
-              </button>
-            </div>
+      {step === 'institution' && (
+        <div className="card w-full max-w-sm p-6 fade-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg">مؤسستك التعليمية</h2>
+            <button className="btn btn-ghost text-sm px-3 py-1.5" onClick={back}>السابق</button>
           </div>
 
-          <label className="label mt-5">أدخل رمز التحقق (6 أرقام)</label>
-          <input className="input text-center tracking-[0.4em] font-bold text-lg" dir="ltr"
-            value={code} maxLength={6} inputMode="numeric" autoFocus
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" />
+          <label className="label">الولاية</label>
+          <select className="input mb-4" value={stateId} onChange={(e) => pickState(e.target.value)}>
+            <option value="">اختر الولاية…</option>
+            {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
 
-          {testCode && (
-            <div className="mt-3 rounded-xl p-3 text-center font-bold" style={{ background: 'rgba(201,169,98,.1)', border: '1px dashed rgba(201,169,98,.4)' }}>
-              <div className="flex items-center justify-center gap-2">
-                <button type="button" className="text-2xl font-black tracking-[0.3em]" style={{ color: 'var(--gold-2)' }}
-                  onClick={() => setCode(testCode)}>
-                  {testCode}
-                </button>
-                <button type="button" onClick={() => copy('code')} className="btn btn-ghost p-1.5 shrink-0"
-                  title="نسخ الرمز">
-                  {copied === 'code' ? <Check size={15} style={{ color: 'var(--ok)' }} /> : <Copy size={15} style={{ color: 'var(--gold)' }} />}
-                </button>
-              </div>
-              <div className="text-[11px] text-[var(--muted)] mt-1">اضغط الرمز لإدخاله، أو انسخه</div>
-            </div>
+          {stateId && (
+            <>
+              <label className="label">الجامعة</label>
+              <select className="input mb-4" value={universityId} onChange={(e) => pickUniversity(e.target.value)}>
+                <option value="">اختر الجامعة…</option>
+                {universities.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+            </>
           )}
 
-          {okMsg && <div className="text-xs mt-2" style={{ color: 'var(--ok)' }}>{okMsg}</div>}
+          {universityId && (
+            <>
+              <label className="label">الكلية</label>
+              <select className="input mb-4" value={facultyId} onChange={(e) => setFacultyId(e.target.value)}>
+                <option value="">اختر الكلية…</option>
+                {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </>
+          )}
 
-          <div className="flex gap-2 mt-4">
-            <button type="button" className="btn btn-ghost flex-1 text-sm" onClick={resend} disabled={busy}>
-              إعادة الإرسال
-            </button>
-            <button type="submit" className="btn btn-gold flex-1 py-2.5" disabled={busy || code.length !== 6}>
-              {busy ? <Spinner /> : 'تحقق'}
-            </button>
-          </div>
-
-          {error && <div className="text-sm mt-3 rounded-xl p-3" style={{ background: 'rgba(228,87,87,.12)', color: '#ff9b94' }}>{error}</div>}
-        </form>
-      )}
-
-      {/* ===== الخطوة 3: تم ===== */}
-      {started && step === 2 && (
-        <div className="card w-full max-w-sm p-6 text-center fade-up">
-          <div className="text-5xl mb-3">🎉</div>
-          <h2 className="text-xl font-black" style={{ color: 'var(--gold)' }}>تم التحقق بنجاح!</h2>
-          <p className="text-sm text-[var(--muted)] mt-2">خطوة واحدة متبقية: تحديد فوجك الجامعي.</p>
-          <button type="button" className="btn btn-gold w-full mt-5 py-3" onClick={() => router.push('/onboarding')}>
-            تحديد الفوج
+          <button className="btn btn-gold w-full mt-2 py-2.5" disabled={!facultyId || busy} onClick={goBranch}>
+            متابعة إلى المستوى
           </button>
         </div>
       )}
 
-      {started && (
-        <p className="text-sm text-[var(--muted)] mt-5">
-          لديك حساب؟{' '}
-          <Link href="/login" className="font-bold" style={{ color: 'var(--gold)' }}>سجل الدخول</Link>
-        </p>
+      {step === 'level' && (
+        <div className="card w-full max-w-sm p-6 fade-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg">مستواك الدراسي</h2>
+            <button className="btn btn-ghost text-sm px-3 py-1.5" onClick={back}>السابق</button>
+          </div>
+          <p className="text-xs text-[var(--muted)] mb-4">اختر مستواك، ثم اختر الفرع المناسب.</p>
+
+          <div className="grid grid-cols-2 gap-2">
+            {LEVELS.map((l) => (
+              <button key={l} type="button" className="btn text-sm"
+                style={levelName === l ? goldStyle : {}}
+                onClick={() => setLevelName(l)}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          <button className="btn btn-gold w-full mt-5 py-2.5" disabled={!levelName || busy} onClick={goBranch}>
+            متابعة إلى الفرع
+          </button>
+        </div>
       )}
 
-      {/* السهم العائم للتفويت — ينتقل دون ملء البيانات */}
-      <NextArrow onClick={next} disabled={busy} />
+      {step === 'branch' && (
+        <div className="card w-full max-w-sm p-6 fade-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg">فرعك / تخصصك</h2>
+            <button className="btn btn-ghost text-sm px-3 py-1.5" onClick={back}>السابق</button>
+          </div>
+          <p className="text-xs text-[var(--muted)] mb-4">فروع الكلية المتاحة لمستوى «{levelName}».</p>
+
+          <select className="input" value={majorId} onChange={(e) => pickBranch(e.target.value)}>
+            <option value="">اختر الفرع…</option>
+            {majors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+
+          <button className="btn btn-gold w-full mt-5 py-2.5" disabled={!studyLevelId} onClick={() => setStep('group')}>
+            متابعة إلى الفوج
+          </button>
+        </div>
+      )}
+
+      {step === 'group' && (
+        <div className="card w-full max-w-sm p-6 fade-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg">فوجك</h2>
+            <button className="btn btn-ghost text-sm px-3 py-1.5" onClick={back}>السابق</button>
+          </div>
+
+          {groups.length > 0 && (
+            <>
+              <div className="mb-2 text-xs text-[var(--muted)]">اختر فوجك الموجود</div>
+              <div className="grid gap-2 max-h-52 overflow-y-auto">
+                {groups.map((g) => (
+                  <button key={g.id} type="button"
+                    className="btn justify-between text-sm text-right"
+                    style={groupId === g.id ? goldStyle : {}}
+                    onClick={() => { setGroupId(g.id); setNewGroupName(''); }}>
+                    <span>{g.name}</span>
+                    <span className="text-xs text-[var(--muted)]">{g.members} عضو</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="my-4 text-center text-xs text-[var(--muted)]">أو أنشئ فوجًا جديدًا</div>
+          <input className="input w-full" placeholder="اسم الفوج الجديد (مثال: الفوج 03)"
+            value={groupId ? '' : newGroupName} onChange={(e) => { setGroupId(''); setNewGroupName(e.target.value); }} />
+
+          <button className="btn btn-gold w-full mt-5 py-3 text-lg"
+            disabled={busy || (!groupId && !newGroupName.trim())}
+            onClick={complete}>
+            {busy ? <Spinner /> : 'ادخل القاعة'}
+          </button>
+        </div>
+      )}
+
+      <p className="text-sm text-[var(--muted)] mt-5">
+        لديك حساب؟{' '}
+        <Link href="/login" className="font-bold" style={{ color: 'var(--gold)' }}>سجل الدخول</Link>
+      </p>
+      <Link href="/" className="text-xs text-[var(--muted)]/60 mt-2">العودة إلى الرئيسية</Link>
+
+      <p className="text-[10px] text-[var(--muted)]/40 mt-3 text-center">
+        صورة الخلفية: «منظر لجامعة الإخوة منتوري» — Youcefabdarhman، رخصة{' '}
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="underline">
+          CC BY 4.0
+        </a>
+      </p>
     </div>
   );
 }

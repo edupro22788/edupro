@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { notifyGroup } from '@/lib/notifications';
 import { ALLOWED_FILE_EXTS, MAX_FILE_SIZE_BYTES } from '@/lib/constants';
 import { saveUpload } from '@/lib/storage';
+import { moderateImage, isImageMime } from '@/lib/image-moderation';
 
 export async function GET() {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
@@ -55,7 +56,12 @@ export async function POST(req: NextRequest) {
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE_SIZE_BYTES) return apiError('حجم الملف مرفق كبير جدًا', 413);
     if (!ALLOWED_FILE_EXTS.includes(file.type)) return apiError('نوع الملف غير مسموح به', 415);
-    fileData = saveUpload(Buffer.from(await file.arrayBuffer()), file.name, file.type, groupId);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (isImageMime(file.type)) {
+      const verdict = await moderateImage(buffer);
+      if (!verdict.ok) return apiError(verdict.reason, 400);
+    }
+    fileData = saveUpload(buffer, file.name, file.type, groupId);
   }
 
   const assignment = await prisma.assignment.create({

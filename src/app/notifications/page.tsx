@@ -6,7 +6,6 @@ import { Bell } from 'lucide-react';
 import TopNav from '@/components/TopNav';
 import { apiGet, apiPost } from '@/lib/client';
 import { Spinner, Empty, TimeAgo } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 type Notif = { id: string; type: string; title: string; body: string; link: string | null; read: boolean; createdAt: string };
 
@@ -74,8 +73,6 @@ export default function NotificationsPage() {
         </div>
       )}
       </div>
-
-      <NextArrow href="/room" />
     </>
   );
 }

@@ -6,7 +6,6 @@ import { Pin, Plus, Trash2 } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import { Spinner, Empty, GenderDot, TimeAgo, ReportButton } from '@/components/ui';
 import { ANNOUNCEMENT_TYPES } from '@/lib/constants';
-import NextArrow from '@/components/NextArrow';
 
 type Ann = {
   id: string; title: string; content: string; type: string; pinned: boolean; createdAt: string;
@@ -127,7 +126,6 @@ export default function AnnouncementsPage() {
         </div>
       )}
 
-      <NextArrow href="/room/chat" />
     </div>
   );
 }

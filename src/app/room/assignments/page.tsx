@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, Calendar, Download, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Download, Trash2, Paperclip, X } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import { Spinner, Empty, GenderDot, TimeAgo } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 type Assignment = {
   id: string; title: string; description: string; dueDate: string | null; fileName: string | null; sizeBytes: number | null; createdAt: string;
@@ -28,6 +27,7 @@ export default function AssignmentsPage() {
   const [s, setS] = useState('');
   const [due, setDue] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     const [room, r, meR] = await Promise.all([
@@ -57,6 +57,7 @@ export default function AssignmentsPage() {
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
     setShow(false); setT(''); setD(''); setS(''); setDue(''); setFile(null);
+    if (fileRef.current) fileRef.current.value = '';
     load();
   };
 
@@ -91,7 +92,34 @@ export default function AssignmentsPage() {
             </select>
           </div>
           <div><label className="label">تاريخ التسليم (اختياري)</label><input className="input" type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} /></div>
-          <div><label className="label">مرفق (اختياري)</label><input type="file" className="block w-full text-sm" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
+          <div>
+            <label className="label">مرفق (اختياري)</label>
+            <input
+              ref={fileRef}
+              type="file"
+              className="hidden"
+              accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            {file ? (
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: 'rgba(201,169,98,.10)', border: '1px solid rgba(201,169,98,.25)' }}>
+                <Paperclip size={15} style={{ color: 'var(--gold)' }} />
+                <span className="text-sm flex-1 truncate">{file.name}</span>
+                <button
+                  type="button"
+                  className="btn btn-ghost p-1"
+                  title="إزالة"
+                  onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ''; }}
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn btn-ghost w-full justify-center" onClick={() => fileRef.current?.click()}>
+                <Paperclip size={15} /> إضافة صورة أو ملف
+              </button>
+            )}
+          </div>
           <div className="md:col-span-2"><label className="label">الوصف</label><textarea className="input" rows={3} value={d} onChange={(e) => setD(e.target.value)} /></div>
           {error && <div className="md:col-span-2 text-sm text-[#ff9b94]">{error}</div>}
           <button className="btn btn-gold md:col-span-2" disabled={busy}>{busy ? <Spinner /> : 'نشر الواجب'}</button>
@@ -130,7 +158,6 @@ export default function AssignmentsPage() {
         </div>
       )}
 
-      <NextArrow href="/room/schedule" />
     </div>
   );
 }

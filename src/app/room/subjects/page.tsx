@@ -7,7 +7,6 @@ import { Plus, X } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import { Spinner, Empty } from '@/components/ui';
 import { SUBJECT_ICONS } from '@/lib/constants';
-import NextArrow from '@/components/NextArrow';
 
 type Subject = { id: string; name: string; icon: string; color: string; active: boolean; _count: { files: number } };
 
@@ -62,11 +61,9 @@ export default function SubjectsPage() {
           <h1 className="text-2xl font-black">المقاييس</h1>
           <p className="text-sm text-[var(--muted)]">دروس، ملخصات، مراجعات، محاضرات، تمارين وملفات لكل مقياس</p>
         </div>
-        {isSup && (
-          <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? <X size={16} /> : <Plus size={16} />} مقياس جديد
-          </button>
-        )}
+        <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
+          {showForm ? <X size={16} /> : <Plus size={16} />} مقياس جديد
+        </button>
       </div>
 
       {showForm && (
@@ -93,7 +90,7 @@ export default function SubjectsPage() {
       )}
 
       {subjects.length === 0 ? (
-        <Empty title="لا توجد مقاييس بعد" hint={isSup ? 'انقر «مقياس جديد» لإنشاء أول مقياس' : 'سيضيف مشرف الفوج المقاييس قريبًا'} />
+        <Empty title="لا توجد مقاييس بعد" hint="انقر «مقياس جديد» لإنشاء أول مقياس" />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {subjects.map((s) => (
@@ -118,8 +115,6 @@ export default function SubjectsPage() {
           ))}
         </div>
       )}
-
-      <NextArrow href="/room/assignments" />
     </div>
   );
 }

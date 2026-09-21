@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Spinner, Empty } from '@/components/ui';
 import { apiGet, apiPost } from '@/lib/client';
-import NextArrow from '@/components/NextArrow';
 
 type Item = { id: string; name: string; members?: number };
 
@@ -86,15 +85,6 @@ export default function OnboardingPage() {
     if (idx > 0) setStep(order[idx - 1]);
   };
 
-  const canNext = order.indexOf(step) < order.length - 1;
-  const advance = () => {
-    const i = order.indexOf(step);
-    if (i >= order.length - 1) return;
-    setItems([]);
-    setNewGroup('');
-    setStep(order[i + 1]);
-  };
-
   if (checking) return <div className="min-h-screen flex items-center justify-center"><Spinner size={26} /></div>;
 
   const isGroupStep = step === 'group';
@@ -172,7 +162,6 @@ export default function OnboardingPage() {
           </>
         )}
       </div>
-    <NextArrow onClick={advance} disabled={!canNext} />
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { apiError, ok } from '@/lib/api-helpers';
 import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { createAndSendCode } from '@/lib/verify';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,20 +25,13 @@ export async function POST(req: NextRequest) {
       email,
       passwordHash: session.reg.passwordHash,
       role: 'STUDENT',
+      emailVerifiedAt: new Date(),
     },
   });
-
-  const { plain, mail } = await createAndSendCode(user.id, email);
 
   session.reg = undefined;
   session.userId = user.id;
   await session.save();
 
-  return ok({
-    userId: user.id,
-    email,
-    mode: mail.mode,
-    // في وضع الاختبار نعرض الرمز مباشرة في واجهة المستخدم
-    ...(mail.mode === 'test' ? { testCode: plain } : {}),
-  });
+  return ok({ userId: user.id, email });
 }

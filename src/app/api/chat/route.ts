@@ -3,7 +3,7 @@ import {
   requireApiGroupMember, ok, apiError, ApiGuardError, isApiSupervisor,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
-import { processChatUpload } from '@/lib/chat-files';
+import { processChatUpload, ChatUploadError, chatUploadStatus } from '@/lib/chat-files';
 import { containsOffensive } from '@/lib/moderation';
 
 export async function GET(req: NextRequest) {
@@ -58,8 +58,14 @@ export async function POST(req: NextRequest) {
   const groupId = user.membership!.groupId;
 
   if (contentType.includes('multipart/form-data')) {
-    const file = await processChatUpload(req, user, groupId);
-    return ok({ message: file });
+    try {
+      const file = await processChatUpload(req, user, groupId);
+      return ok({ message: file });
+    } catch (error) {
+      if (error instanceof ChatUploadError) return apiError(error.message, chatUploadStatus(error));
+      console.error('chat upload failed', error);
+      return apiError('تعذّر رفع الصورة، حاول مجددًا', 500);
+    }
   }
 
   const body = await req.json().catch(() => ({}));

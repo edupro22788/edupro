@@ -1,11 +1,11 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import Link from 'next/link';
 import { Send, Paperclip, Trash2 } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import { Spinner, GenderDot, TimeAgo, ReportButton } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
+import QuotePanel from '@/components/QuotePanel';
 
 type Msg = {
   id: string; content: string; type: 'TEXT' | 'FILE'; createdAt: string;
@@ -59,6 +59,7 @@ export default function ChatPage() {
     const r = await apiPost('/api/chat', fd);
     setBusy(false);
     if (r.ok) load();
+    else alert(r.error);
   };
 
   const del = async (m: Msg) => {
@@ -75,7 +76,7 @@ export default function ChatPage() {
   const isImage = (mime?: string) => mime?.startsWith('image/');
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="mx-auto max-w-6xl px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="breadcrumb mb-1">
@@ -86,7 +87,9 @@ export default function ChatPage() {
         <span className="text-[11px] text-[var(--muted)]">تتحدث الآن بين أعضاء الفوج</span>
       </div>
 
-      <div ref={scrollRef} className="card flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1 gap-4 flex-1 min-h-0">
+      <div className="flex flex-col min-h-0">
+      <div ref={scrollRef} className="card flex-1 overflow-y-auto p-4 space-y-3 min-h-0" style={{ borderColor: 'var(--gold)' }}>
         {loading ? (
           <div className="h-full flex items-center justify-center"><Spinner size={26} /></div>
         ) : msgs.length === 0 ? (
@@ -95,8 +98,9 @@ export default function ChatPage() {
             ابدأ أول محادثة في فوجك
           </div>
         ) : (
-          msgs.map((m) => (
-            <div key={m.id} className={`flex gap-2 ${m.me ? 'justify-start flex-row-reverse' : ''}`}>
+          msgs.map((m, i) => (
+            <Fragment key={m.id}>
+            <div className={`flex gap-2 ${m.me ? 'justify-start flex-row-reverse' : ''}`}>
               <GenderDot gender={m.sender.gender} size={26} />
               <div className={`max-w-[75%] ${m.me ? 'items-end' : ''} flex flex-col`}>
                 <div className="flex items-center gap-2 text-[10px] text-[var(--muted)] mb-0.5" style={{ flexDirection: m.me ? 'row-reverse' : undefined }}>
@@ -128,6 +132,16 @@ export default function ChatPage() {
                 {!m.me && <ReportButton onReport={(reason) => report(m, reason)} />}
               </div>
             </div>
+            {(i + 1) % 10 === 0 && (
+              <div className="flex items-center justify-center gap-3 py-1 select-none" aria-label="تذكير بالصلاة على النبي">
+                <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
+                <span className="text-sm font-bold whitespace-nowrap" style={{ color: '#fff' }}>
+                  ﷺ اللهم صلِّ وسلِّم على نبينا محمد
+                </span>
+                <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
+              </div>
+            )}
+            </Fragment>
           ))
         )}
       </div>
@@ -145,8 +159,10 @@ export default function ChatPage() {
           <Send size={17} />
         </button>
       </form>
+      </div>
 
-      <NextArrow href="/room/notifications" />
+      <QuotePanel />
+      </div>
     </div>
   );
 }

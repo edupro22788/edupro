@@ -29,7 +29,7 @@ type Ann = {
 
 type ScheduleEntry = { id: string; day: number; startTime: string; endTime: string; subjectName: string; professorName: string | null; room: string | null };
 
-export default function RoomPage() {
+export default function RoomPage({ reserved }: { reserved?: boolean }) {
   const router = useRouter();
   const [data, setData] = useState<RoomData | null>(null);
   const [anns, setAnns] = useState<Ann[]>([]);
@@ -40,6 +40,8 @@ export default function RoomPage() {
   const [pinForm, setPinForm] = useState(false);
   const [pin, setPin] = useState({ title: '', content: '', type: 'IMPORTANT' });
   const [notice, setNotice] = useState('');
+  const [me, setMe] = useState<{ firstName: string; lastName: string; email: string } | null>(null);
+  const [showReserved, setShowReserved] = useState(Boolean(reserved));
 
   const load = async () => {
     const room = await apiGet<RoomData>('/api/room');
@@ -50,6 +52,10 @@ export default function RoomPage() {
       return;
     }
     setData(room.data);
+    if (showReserved) {
+      const m = await apiGet<{ user: { firstName: string; lastName: string; email: string } }>('/api/auth/me');
+      if (m.ok) setMe(m.data.user);
+    }
     const an = await apiGet<{ announcements: Ann[] }>('/api/announcements');
     if (an.ok) setAnns(an.data.announcements.slice(0, 5));
     const sc = await apiGet<{ entries: ScheduleEntry[] }>('/api/schedule');
@@ -85,6 +91,29 @@ export default function RoomPage() {
     <div className="mx-auto max-w-6xl px-4 py-6">
       {notice && (
         <div className="mb-4 rounded-xl p-3 text-sm" style={{ background: 'rgba(63,191,127,.12)', color: 'var(--ok)' }}>{notice}</div>
+      )}
+
+      {/* لافتة حجز المقعد */}
+      {showReserved && data && (
+        <div className="card relative overflow-hidden p-5 mb-6 fade-up" style={{ border: '1px solid rgba(63,191,127,.4)' }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(600px 200px at 20% 0%, rgba(63,191,127,.15), transparent 60%)' }} />
+          <div className="relative flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+                style={{ background: 'rgba(63,191,127,.15)', color: 'var(--ok)' }}>🎉</div>
+              <div>
+                <h2 className="font-black text-lg" style={{ color: 'var(--ok)' }}>تم حجز مقعدك في القاعة!</h2>
+                <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
+                  {me && <span className="font-bold text-[var(--fg)]">{me.firstName} {me.lastName}</span>} — مقعدك محجوز في قاعة{' '}
+                  <span className="font-bold" style={{ color: 'var(--gold)' }}>«{data.group.name}»</span>:{' '}
+                  {data.group.path.state} › {data.group.path.university} › {data.group.path.faculty} ›{' '}
+                  {data.group.path.major} › {data.group.path.level}
+                </p>
+              </div>
+            </div>
+            <button className="btn btn-ghost text-sm px-3 py-1.5 shrink-0" onClick={() => setShowReserved(false)}>إغلاق</button>
+          </div>
+        </div>
       )}
 
       {/* بطاقة الفوج */}

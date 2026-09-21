@@ -9,7 +9,6 @@ import {
   Spinner, Empty, Modal, FileTypeIcon, StatusPill, TimeAgo, GenderDot, ReportButton,
 } from '@/components/ui';
 import { CATEGORY_ORDER, CATEGORY_LABELS } from '@/lib/constants';
-import NextArrow from '@/components/NextArrow';
 
 // إعادة تصدير بأسماء مقروءة
 const CATS: Record<string, string> = CATEGORY_LABELS;
@@ -256,8 +255,6 @@ export default function SubjectDetailPage() {
           </div>
         )}
       </Modal>
-
-      <NextArrow href="/room/assignments" />
     </div>
   );
 }

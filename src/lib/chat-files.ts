@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { prisma } from './prisma';
 import { saveUpload } from './storage';
 import { MAX_FILE_SIZE_BYTES } from './constants';
+import { moderateImage } from './image-moderation';
 import type { UserModel } from '../../generated/prisma/models/User';
 
 const CHAT_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -18,6 +19,10 @@ export async function processChatUpload(req: NextRequest, user: UserModel, group
   if (file.size > MAX_FILE_SIZE_BYTES) throw new ChatUploadError('حجم الصورة كبير جدًا');
 
   const buffer = Buffer.from(await file.arrayBuffer());
+
+  const verdict = await moderateImage(buffer);
+  if (!verdict.ok) throw new ChatUploadError(verdict.reason);
+
   const saved = saveUpload(buffer, file.name, file.type, groupId);
 
   const studyFile = await prisma.studyFile.create({

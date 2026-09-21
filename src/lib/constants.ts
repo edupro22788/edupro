@@ -1,6 +1,6 @@
 export const PLATFORM = {
   name: 'EDU PRO',
-  tagline: 'طالب يساعد طالبًا',
+  tagline: 'التعاون المعرفي الجامعي',
 };
 
 export const CONTENT_CATEGORIES = {

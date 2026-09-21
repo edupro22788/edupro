@@ -8,6 +8,7 @@ import {
   ALLOWED_FILE_EXTS, FILE_EXT_LABEL, CONTENT_CATEGORIES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB,
 } from '@/lib/constants';
 import { saveUpload } from '@/lib/storage';
+import { moderateImage, isImageMime } from '@/lib/image-moderation';
 
 export async function GET(req: NextRequest) {
   let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
@@ -106,6 +107,10 @@ export async function POST(req: NextRequest) {
 
   const groupId = user.membership!.groupId;
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (isImageMime(file.type)) {
+    const verdict = await moderateImage(buffer);
+    if (!verdict.ok) return apiError(verdict.reason, 400);
+  }
   const saved = saveUpload(buffer, file.name, file.type, groupId);
 
   const record = await prisma.studyFile.create({

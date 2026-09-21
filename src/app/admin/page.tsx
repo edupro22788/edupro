@@ -8,7 +8,6 @@ import {
 import TopNav from '@/components/TopNav';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import { Spinner, Empty, TimeAgo } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 import { REPORT_REASONS } from '@/lib/constants';
 
 type Summary = {
@@ -330,8 +329,6 @@ export default function AdminPage() {
           </div>
         )}
       </div>
-
-      <NextArrow href="/room" />
     </>
   );
 }

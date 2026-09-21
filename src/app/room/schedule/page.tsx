@@ -6,7 +6,6 @@ import { Plus, Trash2 } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '@/lib/client';
 import { Spinner, Empty } from '@/components/ui';
 import { DAYS } from '@/lib/constants';
-import NextArrow from '@/components/NextArrow';
 
 type Entry = { id: string; day: number; startTime: string; endTime: string; subjectName: string; professorName: string | null; room: string | null };
 
@@ -126,7 +125,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-      <NextArrow href="/room/announcements" />
     </div>
   );
 }

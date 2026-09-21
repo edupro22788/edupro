@@ -47,12 +47,46 @@ export default function LandingScene() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [isMobile, setIsMobile] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ firstName: string; lastName: string } | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const startedRef = useRef(false);
+
+  const goOrganized = () => {
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        const u = data?.user;
+        if (!u) { router.push('/register'); return; }
+        if (u.role === 'ADMIN') { router.push('/admin'); return; }
+        if (!data?.group) { router.push('/onboarding'); return; }
+        router.push('/room');
+      })
+      .catch(() => router.push('/register'));
+  };
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 760);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => { if (active) setCurrentUser(d?.user ?? null); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const logout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCurrentUser(null);
+      window.location.reload();
+    } catch {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     if (!mountRef.current || isMobile) return;
@@ -123,7 +157,7 @@ export default function LandingScene() {
         lamp.position.y = 2.7 - 0.15 * ease;
         if (p > 1) {
           setP('leaving');
-          setTimeout(() => { router.push('/room'); }, 550);
+          setTimeout(() => { goOrganized(); }, 550);
         }
       } else if (phaseState === 'leaving') {
         // المصباح يُشعل ويضيء الغرفة
@@ -172,6 +206,22 @@ export default function LandingScene() {
           'radial-gradient(900px 500px at 50% 0%, rgba(201,169,98,0.16), transparent 60%), radial-gradient(700px 500px at 15% 100%, rgba(238,127,174,0.12), transparent 55%), #3a2447',
       }} />
 
+      {/* شريط حالة الجلسة */}
+      {currentUser && (
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-1.5 text-xs md:text-sm whitespace-nowrap"
+          style={{ background: 'rgba(58,36,71,.85)', backdropFilter: 'blur(12px)' }}
+        >
+          <span className="text-[var(--muted)]">
+            مسجّل الدخول: <span className="font-bold text-white">{currentUser.firstName} {currentUser.lastName}</span>
+          </span>
+          <button className="btn btn-ghost px-2 py-1 text-xs" onClick={() => router.push('/room')}>قاعتي</button>
+          <button className="btn btn-ghost px-2 py-1 text-xs" onClick={logout} disabled={loggingOut}>
+            {loggingOut ? '…' : 'تسجيل الخروج'}
+          </button>
+        </div>
+      )}
+
       {/* المشهد */}
       {!isMobile ? (
         <div ref={mountRef} className="absolute inset-0 z-[1]" style={{ cursor: 'pointer' }} />
@@ -181,7 +231,7 @@ export default function LandingScene() {
           <div className="floaty text-center">
             <div className="w-40 h-2 mx-auto rounded-full" style={{ background: 'linear-gradient(90deg, transparent, #c9a962, transparent)' }} />
             <div className="text-6xl mt-6 mb-2 glow-pulse">🤝</div>
-            <div className="text-sm text-[var(--muted)] mt-1">طالب يساعد طالبًا</div>
+            <div className="text-sm text-[var(--muted)] mt-1">التعاون المعرفي الجامعي</div>
           </div>
         </div>
       )}
@@ -190,53 +240,34 @@ export default function LandingScene() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pointer-events-none">
         <div className="mt-[16vh] md:mt-[8vh] text-center pointer-events-auto">
           <p className="text-lg md:text-2xl text-[var(--muted)] mt-2 font-semibold">
-            طالب يساعد طالبًا
+            التعاون المعرفي الجامعي
           </p>
           <p className="text-sm md:text-base text-[var(--muted)]/70 mt-3 max-w-md mx-auto leading-relaxed">
-            غرفة فوجك الرقمية: مقياس، واجب، دردشة، جدول، وموضوع مهم — كل ما تحتاجه في مكان واحد.
+            انضم إلى فوجك الجامعي الرقمي: حمّل المقيّسات، سلّم الواجبات، تابِع الجدول،
+            وتواصل مع زملاء قسمك — كل ما تحتاجه في مكان واحد.
           </p>
 
           <button
             className="btn btn-gold mt-6 text-lg px-8 py-3.5"
-            style={{ transform: phase === 'action' || phase === 'leaving' ? 'scale(.96)' : undefined, pointerEvents: startedRef.current ? 'auto' : 'auto' }}
+            style={{ transform: phase === 'action' || phase === 'leaving' ? 'scale(.96)' : undefined }}
             onClick={() => {
-              if (isMobile) { router.push('/room'); return; }
+              if (isMobile) { goOrganized(); return; }
               startedRef.current = true;
               setPhase('action');
-              setTimeout(() => router.push('/room'), 2600);
+              setTimeout(goOrganized, 2600);
             }}
           >
-            {phase === 'idle' ? 'ادخل القاعة' : 'جاري التحضير…'}
+            {phase === 'idle' ? 'ابدأ' : 'جاري التحضير…'}
           </button>
 
-          <div className="mt-3">
-            <button
-              type="button"
-              className="text-sm font-semibold opacity-80 hover:opacity-100 underline underline-offset-4"
-              style={{ color: 'var(--gold-2)' }}
-              disabled={busy}
-              onClick={async () => {
-                if (busy) return;
-                setBusy(true);
-                try {
-                  const r = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: 'student@demo.dz', password: 'demo123' }),
-                  });
-                  if (!r.ok) { setBusy(false); alert('تعذر الدخول السريع — جرّب التسجيل أولاً'); return; }
-                  window.location.href = '/room';
-                } catch { setBusy(false); alert('تعذر الدخول السريع — تحقق من الخادم'); }
-              }}
-            >
-              {busy ? 'جارٍ الدخول…' : 'تخطَّ وادخل مباشرة (دخول تجريبي)'}
-            </button>
-          </div>
+          <p className="text-sm text-[var(--muted)]/80 mt-4 font-semibold">
+            انضم وسجّل بياناتك لتدخل إلى قاعة فوجك
+          </p>
         </div>
       </div>
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-[11px] text-[var(--muted)]/50 pointer-events-none">
-        {isMobile ? 'اضغط «ادخل القاعة» للانطلاق' : 'اضغط «ادخل القاعة» أو على المشهد'}
+        {isMobile ? 'اضغط «ابدأ» للانطلاق' : 'اضغط «ابدأ» أو على المشهد'}
       </div>
     </div>
   );

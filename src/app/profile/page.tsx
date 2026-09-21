@@ -6,7 +6,6 @@ import { User } from 'lucide-react';
 import TopNav from '@/components/TopNav';
 import { apiGet } from '@/lib/client';
 import { Spinner, GenderDot, SupervisorBadge } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 type Me = {
   user: {
@@ -97,8 +96,6 @@ export default function ProfilePage() {
           <User size={16} /> العودة إلى الصفحة الرئيسية
         </Link>
       </div>
-
-      <NextArrow href="/room" />
     </>
   );
 }

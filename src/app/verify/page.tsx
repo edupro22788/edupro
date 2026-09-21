@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Copy, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -14,7 +13,6 @@ export default function VerifyPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
 
   const copyCode = async () => {
     try {
@@ -66,7 +64,7 @@ export default function VerifyPage() {
         <p className="text-sm text-[var(--muted)] mt-1">أدخل الرمز المرسل إلى بريدك</p>
       </div>
 
-      <form ref={formRef} onSubmit={verify} className="card w-full max-w-sm p-6 fade-up">
+      <form onSubmit={verify} className="card w-full max-w-sm p-6 fade-up">
         <input className="input text-center tracking-[0.4em] font-bold text-lg" dir="ltr"
           value={code} maxLength={6} inputMode="numeric"
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" />
@@ -86,8 +84,6 @@ export default function VerifyPage() {
           {busy ? <Spinner /> : 'تحقق'}
         </button>
       </form>
-
-      <NextArrow onClick={() => code.length === 6 && formRef.current?.requestSubmit()} disabled={code.length !== 6} />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EDU PRO — طالب يساعد طالبًا",
+  title: "EDU PRO — التعاون المعرفي الجامعي",
   description: "منصة جامعية رقمية لأفواج الطلبة في الجزائر: شارك، تعلّم، تعاون.",
 };
 

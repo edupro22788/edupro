@@ -6,7 +6,6 @@ import { Search, FileText, ClipboardList, Pin, MessagesSquare, User, BookOpen } 
 import TopNav from '@/components/TopNav';
 import { apiGet } from '@/lib/client';
 import { Spinner, Empty, TimeAgo, GenderDot } from '@/components/ui';
-import NextArrow from '@/components/NextArrow';
 
 type Results = {
   files: { id: string; title: string; category: string; createdAt: string }[];
@@ -129,7 +128,6 @@ export default function SearchPage() {
         )}
       </div>
 
-      <NextArrow href="/room" />
     </>
   );
 }

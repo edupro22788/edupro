@@ -1,0 +1,338 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #3a2447;
+  --bg-2: #452a52;
+  --panel: #502f5e;
+  --panel-2: #5d3a6c;
+  --line: rgba(255, 255, 255, 0.1);
+  --gold: #c9a962;
+  --gold-2: #e8c87a;
+  --gold-3: #8f7236;
+  --text: #f4eef6;
+  --muted: #cbb3d6;
+  --purple: #b37fdd;
+  --pink: #ee7fae;
+  --danger: #e45757;
+  --ok: #3fbf7f;
+  --radius: 14px;
+  --shadow: 0 20px 60px rgba(28, 8, 32, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(201, 169, 98, 0.08), transparent 60%),
+    radial-gradient(1000px 500px at -10% 110%, rgba(238, 127, 174, 0.12), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: "Cairo", "Tajawal", "Segoe UI", "Tahoma", system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 16, 8, 0.18);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 16, 8, 0.3);
+  background-clip: content-box;
+}
+
+/* ===== العناصر العامة ===== */
+.card {
+  background: linear-gradient(180deg, var(--panel), rgba(58, 36, 71, 0.85));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border-color: rgba(201, 169, 98, 0.4);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #e3c27c, #b8934a);
+  color: #13140f;
+  border-color: rgba(255, 230, 170, 0.4);
+  font-weight: 700;
+}
+.btn-gold:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 12px 36px rgba(201, 169, 98, 0.35);
+}
+
+.btn-ghost {
+  background: transparent;
+}
+.btn-danger {
+  background: rgba(228, 87, 87, 0.12);
+  color: #ff9b94;
+  border-color: rgba(228, 87, 87, 0.3);
+}
+
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 15px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+.input::placeholder {
+  color: rgba(178,173,160,0.5);
+}
+.input:focus {
+  border-color: rgba(201, 169, 98, 0.7);
+  box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.15);
+}
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b2ada0' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 14px center;
+  padding-left: 36px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ===== الشعار ===== */
+.logo-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.logo-title {
+  font-size: 18px;
+}
+.logo-sub {
+  font-size: 10.5px;
+  color: var(--gold);
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+
+/* ===== الصناديق الذهبية 3D ===== */
+.box3d {
+  --bx: 0deg;
+  --by: 0deg;
+  position: relative;
+  transform: perspective(950px) rotateX(var(--bx)) rotateY(var(--by)) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease;
+}
+.box3d:hover {
+  --bx: 4deg;
+  --by: -4deg;
+}
+
+.sidenav-item {
+  transition: scale 0.2s ease, filter 0.2s ease;
+  scale: 1;
+}
+.sidenav-item:hover {
+  scale: 1.16;
+}
+.sidenav-item:active {
+  scale: 0.96;
+}
+
+.gold-box {
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f0d493 0%, #c9a962 28%, #8f7236 55%, #bfa05c 78%, #e7c77c 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -18px 40px rgba(60, 42, 8, 0.5),
+    0 26px 50px rgba(0, 0, 0, 0.45),
+    0 6px 18px rgba(201, 169, 98, 0.18);
+  transform: translateZ(6px);
+}
+.gold-box::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 236, 180, 0.35);
+  pointer-events: none;
+}
+.gold-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.35) 0%, transparent 32%, transparent 70%, rgba(255, 255, 255, 0.18) 100%);
+  pointer-events: none;
+}
+.gold-box .box-top {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 244, 205, 0.9), rgba(201, 169, 98, 0.9));
+  transform: translateZ(26px) translateY(-3px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+}
+.gold-box .box-top::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 90, 30, 0.35);
+}
+
+/* ===== الشارة ===== */
+.badge-supervisor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #13140f;
+  background: linear-gradient(135deg, #e8c87a, #c9a962);
+  border-radius: 20px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 240, 190, 0.6);
+}
+
+.gender-dot-male {
+  background: #2a4370;
+  color: #fff;
+}
+.gender-dot-female {
+  background: #c9a962;
+  color: #fff;
+}
+
+/* ===== مسار التنقل ===== */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.breadcrumb a:hover {
+  color: var(--gold-2);
+}
+.breadcrumb .sep {
+  opacity: 0.4;
+}
+.breadcrumb .current {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ===== فقاعات الدردشة ===== */
+.chat-bubble {
+  border-radius: 18px 18px 18px 6px;
+}
+.chat-bubble.me {
+  border-radius: 18px 18px 6px 18px;
+}
+
+/* ===== شعار الهوية (SVG) ===== */
+.brand-mark {
+  filter: drop-shadow(0 4px 12px rgba(201, 169, 98, 0.35));
+}
+
+/* ===== حركات ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.floaty {
+  animation: floaty 5s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.glow-pulse {
+  animation: glowPulse 3.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* ترتيب لجهاز صغير */
+@media (max-width: 640px) {
+  body {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,9 @@
+# Railway deployment config for EDU PRO
+# SQLite + uploads live on a persistent volume mounted at /data
+
+[build]
+builder = "nixpacks"
+
+[build.nixpacks]
+buildCommand = "npm ci --legacy-peer-deps && npx prisma generate && npm run build"
+startCommand = "npx prisma db push --skip-generate && npx tsx scripts/seed-if-empty.ts && npm run start"

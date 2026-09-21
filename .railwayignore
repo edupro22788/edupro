@@ -1,0 +1,8 @@
+node_modules
+.next
+data
+dev.db
+*.db
+.env
+.git
+scripts/checkdemo.cjs

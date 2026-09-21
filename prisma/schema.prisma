@@ -1,0 +1,485 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================================
+//  EDU PRO — مخطط قاعدة البيانات
+//  ملاحظة: يستخدم SQLite في التطوير.
+//  للترقية إلى PostgreSQL: غيّر provider إلى "postgresql" وحدّث DATABASE_URL.
+// ============================================================
+
+// ---------- الهوية والصلاحيات ----------
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id             String   @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String   @unique
+  emailVerifiedAt DateTime?
+  passwordHash   String
+  role           Role     @default(STUDENT)
+  gender         Gender?
+  supervisesGroup Group?  @relation("GroupSupervisorUser")
+
+  membership     Membership?
+  supervisorOf   GroupSupervisor[]
+  nominated      Candidate[]
+  votesCast      Vote[]
+  files          StudyFile[]
+  assignments    Assignment[]
+  announcements  Announcement[]
+  chatMessages   ChatMessage[]
+  reportsMade    Report[]
+  reportsHandled Report[] @relation("HandledReports")
+  notifications  Notification[]
+  emailCodes     EmailVerification[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+// ---------- البنية: الولاية ← الجامعة ← الكلية ← التخصص ← المستوى ← الفوج ----------
+model State {
+  id           String       @id @default(cuid())
+  name         String       @unique
+  order        Int          @default(0)
+  universities University[]
+
+  createdAt    DateTime     @default(now())
+}
+
+model University {
+  id        String   @id @default(cuid())
+  name      String
+  stateId   String
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  faculties Faculty[]
+
+  createdAt DateTime @default(now())
+
+  @@index([stateId])
+  @@unique([stateId, name])
+}
+
+model Faculty {
+  id         String  @id @default(cuid())
+  name       String
+  universityId String
+  university University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  majors     Major[]
+
+  createdAt  DateTime @default(now())
+
+  @@index([universityId])
+  @@unique([universityId, name])
+}
+
+model Major {
+  id        String    @id @default(cuid())
+  name      String
+  facultyId String
+  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  levels    StudyLevel[]
+
+  createdAt DateTime  @default(now())
+
+  @@index([facultyId])
+  @@unique([facultyId, name])
+}
+
+// المستوى الدراسي: ليسانس 1، ماستر 1، ...
+model StudyLevel {
+  id      String  @id @default(cuid())
+  name    String
+  majorId String
+  major   Major   @relation(fields: [majorId], references: [id], onDelete: Cascade)
+  groups  Group[]
+
+  createdAt DateTime @default(now())
+
+  @@index([majorId])
+  @@unique([majorId, name])
+}
+
+// الفوج
+model Group {
+  id            String           @id @default(cuid())
+  name          String
+  studyLevelId  String
+  studyLevel    StudyLevel       @relation(fields: [studyLevelId], references: [id], onDelete: Cascade)
+
+  supervisorId  String?  @unique
+  supervisor    User?            @relation("GroupSupervisorUser", fields: [supervisorId], references: [id])
+
+  memberships   Membership[]
+  subjectMarks  Subject[]
+  files         StudyFile[]
+  assignments   Assignment[]
+  announcements Announcement[]
+  scheduleEntries WeeklySchedule[]
+  chatMessages  ChatMessage[]
+  reports       Report[]
+  elections     Election[]
+  groupSupervisors GroupSupervisor[]
+  notifications Notification[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([studyLevelId])
+  @@unique([studyLevelId, name])
+}
+
+// العضوية: الطالب ينتمي لفوج واحد نشط
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@index([groupId])
+  @@index([userId])
+}
+
+// سجل المشرفين (الحالي والسابق)
+model GroupSupervisor {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  electedBy String?  // "vote" أو "seed"
+
+  @@index([groupId, endedAt])
+}
+
+// ---------- المقاييس والمحتوى ----------
+model Subject {
+  id        String      @id @default(cuid())
+  name      String
+  icon      String      @default("academic")
+  color     String      @default("#c9a962")
+  groupId   String
+  group     Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdById String?
+  files     StudyFile[]
+  assignments Assignment[]
+  active    Boolean     @default(true)
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([groupId])
+  @@unique([groupId, name])
+}
+
+enum FileStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  DELETED
+}
+
+enum ContentCategory {
+  LESSON
+  SUMMARY
+  REVISION
+  LECTURE
+  EXERCISE
+  FILE
+}
+
+model StudyFile {
+  id          String          @id @default(cuid())
+  title       String
+  description String          @default("")
+  category    ContentCategory @default(FILE)
+  groupId     String
+  group       Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  uploaderId  String
+  uploader    User            @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  fileName    String
+  storedName  String
+  storedPath  String
+  mimeType    String
+  sizeBytes   Int
+
+status      FileStatus      @default(PENDING)
+  rejectReason String?
+
+  createdAt DateTime        @default(now())
+updatedAt        DateTime        @updatedAt
+
+  chatMessages     ChatMessage[]
+
+  @@index([groupId, status])
+  @@index([subjectId])
+  @@index([uploaderId])
+}
+
+// ---------- الواجبات ----------
+model Assignment {
+  id          String          @id @default(cuid())
+  title       String
+  description String          @default("")
+  groupId     String
+  group       Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  uploaderId  String
+  uploader    User            @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  dueDate     DateTime?
+  status      FileStatus      @default(PUBLISHED)
+
+  fileName    String?
+  storedName  String?
+  storedPath  String?
+  mimeType    String?
+  sizeBytes   Int?
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([groupId])
+}
+
+// ---------- المواضيع المهمة ----------
+enum AnnouncementType {
+  PROF_ABSENCE
+  SCHEDULE_CHANGE
+  ROOM_CHANGE
+  POSTPONEMENT
+  TIME_CHANGE
+  IMPORTANT
+  STUDY_ALERT
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String
+  content   String
+  type      AnnouncementType @default(IMPORTANT)
+  groupId   String
+  group     Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pinned    Boolean          @default(false)
+  status    FileStatus       @default(PUBLISHED)
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([groupId, pinned])
+}
+
+// ---------- الجدول الأسبوعي ----------
+model WeeklySchedule {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  day       Int      // 0=السبت .. 6=الجمعة (أسبوع جامعي جزائري)
+  startTime String
+  endTime   String
+  subjectName String
+  professorName String?
+  room      String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([groupId, day])
+}
+
+// ---------- الدردشة العامة ----------
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum MessageStatus {
+  ACTIVE
+  DELETED
+}
+
+model ChatMessage {
+  id          String        @id @default(cuid())
+  groupId     String
+  group       Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  content     String
+  messageType MessageType   @default(TEXT)
+  status      MessageStatus @default(ACTIVE)
+  fileRefId   String?
+  fileRef     StudyFile?    @relation(fields: [fileRefId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime      @default(now())
+
+  @@index([groupId, createdAt])
+}
+
+// ---------- البلاغات ----------
+enum ReportType {
+  CHAT_MESSAGE
+  FILE
+  ANNOUNCEMENT
+  ASSIGNMENT
+  USER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id        String       @id @default(cuid())
+  groupId   String
+  group     Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter  User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  type      ReportType
+  targetId  String       // معرّف الرسالة/الملف/...
+  reason    String
+  content   String?      // ملاحظة إضافية
+  status    ReportStatus @default(PENDING)
+  handledById String?
+  handledBy User?        @relation("HandledReports", fields: [handledById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime     @default(now())
+  handledAt DateTime?
+
+  @@index([groupId, status])
+  @@index([status])
+}
+
+// ---------- ترشيح وانتخاب المشرف ----------
+enum ElectionStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+model Election {
+  id        String         @id @default(cuid())
+  groupId   String
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  status    ElectionStatus @default(OPEN)
+  startsAt  DateTime       @default(now())
+  endsAt    DateTime?
+  winnerId  String?
+
+  candidates Candidate[]
+  votes      Vote[]
+
+  createdAt DateTime       @default(now())
+
+  @@index([groupId, status])
+}
+
+model Candidate {
+  id         String    @id @default(cuid())
+  electionId String
+  election   Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statement  String?
+  votes      Vote[]
+
+  createdAt  DateTime  @default(now())
+
+  @@index([electionId])
+  @@unique([electionId, userId])
+}
+
+model Vote {
+  id          String    @id @default(cuid())
+  electionId  String
+  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  voterId     String
+  voter       User      @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+
+  @@index([electionId])
+  @@unique([electionId, voterId])
+}
+
+// ---------- الإشعارات ----------
+enum NotificationType {
+  FILE_UPLOADED
+  ASSIGNMENT_ADDED
+  ANNOUNCEMENT
+  SUBJECT_ADDED
+  SCHEDULE_UPDATED
+  CHAT_ACTIVITY
+  SUPERVISOR_ELECTED
+  CONTENT_STATUS
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  read      Boolean          @default(false)
+
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// ---------- التحقق من البريد ----------
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}

@@ -17,7 +17,7 @@ async function main() {
 
   await db.$disconnect();
   console.log('Seeding demo data...');
-  execSync('npx tsx prisma/seed.ts', { stdio: 'inherit' });
+  execSync('node node_modules/tsx/dist/cli.mjs prisma/seed.ts', { stdio: 'inherit' });
   console.log('Seed completed.');
 }
 

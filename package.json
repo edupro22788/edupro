@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "prisma db push --skip-generate && node scripts/boot.mjs && next start",
+    "start": "prisma db push && node scripts/boot.mjs && next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },

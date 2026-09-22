@@ -204,10 +204,10 @@ export default function SubjectDetailPage() {
           </div>
         </>
       ) : (
-        <Empty title="المقياس غير موجود" />
+        <Empty title="المقياس غير موجود" hint="المقياس غير متاح لفوجك — تحقق من تسجيل الدخول بصفحتك الصحيحة" />
       )}
 
-      {showUpload && (
+      {subject && showUpload && (
         <form onSubmit={upload} className="card p-5 mb-6 fade-up">
           <h3 className="font-bold mb-3">إضافة ملف إلى «{subject?.name}»</h3>
           <div className="grid md:grid-cols-2 gap-3 mb-3">
@@ -306,6 +306,7 @@ export default function SubjectDetailPage() {
       )}
 
       {/* الصور */}
+      {subject && (
       <div className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div>
@@ -384,6 +385,7 @@ export default function SubjectDetailPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* معاينة */}
       <Modal open={Boolean(viewFile)} onClose={() => setViewId(null)} title={viewFile?.title || ''}>

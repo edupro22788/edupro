@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
     const subj = await prisma.subject.findUnique({ where: { id: subjectId } });
     if (!subj) return apiError('المقياس غير موجود', 404);
     where = { subjectId: subj.id };
+  } else if (sp.get('unlinked') === '1') {
+    if (!groupId) return apiError('يجب تحديد فوجك أولًا', 403);
+    where = { groupId, subjectId: null };
   }
   if (category && category in CONTENT_CATEGORIES) where.category = category;
 
@@ -136,7 +139,6 @@ await notifyGroup({
       title: 'ملف جديد 📄',
       body: `رفع ${user.firstName} ${user.lastName} الملف: ${title} — بانتظار المراجعة`,
       link: '/room/subjects',
-      excludeUserId: user.id,
     });
 
   return ok({ file: { id: record.id, title: record.title, status: record.status } });

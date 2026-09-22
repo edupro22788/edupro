@@ -95,7 +95,12 @@ export default function SubjectDetailPage() {
       apiGet<{ subjects: Subject[] }>('/api/subjects'),
     ]);
     if (room.ok) setIsSup(room.data.isSupervisor);
-    if (subj.ok) setSubject(subj.data.subjects.find((s) => s.id === subjectId) || null);
+    let found = subj.ok ? subj.data.subjects.find((s) => s.id === subjectId) || null : null;
+    if (!found) {
+      const one = await apiGet<{ subject: Subject }>(`/api/subjects/${subjectId}`);
+      if (one.ok) found = one.data.subject;
+    }
+    setSubject(found);
 
     const q = new URLSearchParams({ subjectId });
     if (mine) q.set('mine', '1');

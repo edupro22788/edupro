@@ -64,6 +64,17 @@ export function isApiSupervisor(user: ApiUser): boolean {
   return Boolean(user.membership && user.membership.group.supervisorId === user.id);
 }
 
+/** هل يمكن للمستخدم الوصول إلى مقياس معيّن (فوجه، أو منشئه، أو أدمن المنصة)؟ */
+export function canAccessSubject(
+  user: ApiUser,
+  subject: { groupId: string; createdById: string | null },
+): boolean {
+  if (user.role === 'ADMIN') return true;
+  if (subject.createdById && subject.createdById === user.id) return true;
+  if (user.membership && subject.groupId === user.membership.groupId) return true;
+  return false;
+}
+
 export class ApiGuardError extends Error {
   response: NextResponse;
   constructor(response: NextResponse) {

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import {
-  requireApiGroupMember, ok, apiError, ApiGuardError, isApiSupervisor,
+  requireApiUser, ok, apiError, ApiGuardError, isApiSupervisor, canAccessSubject,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { notifyGroup } from '@/lib/notifications';
@@ -11,29 +11,29 @@ import { saveUpload } from '@/lib/storage';
 import { moderateImage, isImageMime } from '@/lib/image-moderation';
 
 export async function GET(req: NextRequest) {
-  let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
+  let user = await requireApiUser().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
 
-  const groupId = user.membership!.groupId;
+  const groupId = user.membership?.groupId ?? null;
   const sp = req.nextUrl.searchParams;
   const subjectId = sp.get('subjectId');
   const category = sp.get('category');
   const mine = sp.get('mine') === '1';
   const includePending = sp.get('pending') === '1';
 
-  const where: Record<string, unknown> = { groupId };
+  let where: Record<string, unknown> = groupId ? { groupId } : {};
 
   if (subjectId) {
-    const subj = await prisma.subject.findFirst({ where: { id: subjectId, groupId } });
-    if (!subj) return apiError('المقياس غير موجود', 404);
-    where.subjectId = subjectId;
+    const subj = await prisma.subject.findUnique({ where: { id: subjectId } });
+    if (!subj || !canAccessSubject(user, subj)) return apiError('المقياس غير موجود', 404);
+    where = { subjectId: subj.id };
   }
   if (category && category in CONTENT_CATEGORIES) where.category = category;
 
   if (mine) {
     where.uploaderId = user.id;
     where.status = { in: ['PUBLISHED', 'PENDING', 'REJECTED'] };
-  } else if (includePending && isApiSupervisor(user)) {
+  } else if (includePending && (isApiSupervisor(user) || user.role === 'ADMIN')) {
     where.status = { in: ['PUBLISHED', 'PENDING', 'REJECTED'] };
   } else {
     where.OR = [
@@ -67,13 +67,13 @@ export async function GET(req: NextRequest) {
       createdAt: f.createdAt,
       uploader: f.uploader,
       subject: f.subject,
-      canManage: isApiSupervisor(user) || f.uploaderId === user.id,
+      canManage: isApiSupervisor(user) || f.uploaderId === user.id || user.role === 'ADMIN',
     })),
   });
 }
 
 export async function POST(req: NextRequest) {
-  let user = await requireApiGroupMember().catch((e: unknown) => e as ApiGuardError);
+  let user = await requireApiUser().catch((e: unknown) => e as ApiGuardError);
   if (user instanceof ApiGuardError) return user.response;
 
   const form = await req.formData().catch(() => null);
@@ -97,15 +97,14 @@ export async function POST(req: NextRequest) {
   const subjectIdRaw = String(form.get('subjectId') || '');
 
   let subjectId: string | null = null;
+  let groupId = user.membership?.groupId ?? null;
   if (subjectIdRaw) {
-    const subj = await prisma.subject.findFirst({
-      where: { id: subjectIdRaw, groupId: user.membership!.groupId },
-    });
-    if (!subj) return apiError('المقياس غير محدد بشكل صحيح');
+    const subj = await prisma.subject.findUnique({ where: { id: subjectIdRaw } });
+    if (!subj || !canAccessSubject(user, subj)) return apiError('المقياس غير محدد بشكل صحيح');
     subjectId = subj.id;
+    groupId = subj.groupId;
   }
-
-  const groupId = user.membership!.groupId;
+  if (!groupId) return apiError('يجب تحديد فوجك أولًا', 403);
   const buffer = Buffer.from(await file.arrayBuffer());
   if (isImageMime(file.type)) {
     const verdict = await moderateImage(buffer);

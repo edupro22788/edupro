@@ -33,6 +33,39 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
 }
 
+function Dropzone({ accept, file, onPick, label }: {
+  accept?: string;
+  file: File | null;
+  onPick: (f: File | null) => void;
+  label: string;
+}) {
+  return (
+    <label
+      className="block cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-6 text-center transition-colors hover:border-[var(--gold)]"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const f = e.dataTransfer.files?.[0];
+        if (f) onPick(f);
+      }}
+    >
+      <input type="file" accept={accept} className="sr-only" onChange={(e) => onPick(e.target.files?.[0] || null)} />
+      <Upload size={22} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
+      {file ? (
+        <>
+          <div className="text-sm font-bold text-[var(--gold)] line-clamp-1">{file.name}</div>
+          <div className="text-[11px] text-[var(--muted)] mt-1">تم اختيار الملف — يمكنك تغييره بالنقر مجددًا</div>
+        </>
+      ) : (
+        <>
+          <div className="text-sm font-bold">{label}</div>
+          <div className="text-[11px] text-[var(--muted)] mt-1">انقر هنا لفتح نافذة اختيار الملف، أو اسحب الملف وأفلته هنا</div>
+        </>
+      )}
+    </label>
+  );
+}
+
 export default function SubjectDetailPage() {
   const params = useParams<{ id: string }>();
   const subjectId = params.id;
@@ -184,7 +217,16 @@ export default function SubjectDetailPage() {
             </select>
           </div>
           <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
-          <input type="file" accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar" className="block w-full text-sm mb-3" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
+          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
+          <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الملف — ② اكتب عنوان الملف بالأعلى — ③ اضغط «رفع»</div>
+          <div className="mb-3">
+            <Dropzone
+              accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
+              file={uFile}
+              onPick={setUFile}
+              label="① اختر الملف (PDF، وورد، إكسل، PowerPoint...)"
+            />
+          </div>
           {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
           <div className="text-[11px] text-[var(--muted)] mb-3">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
           <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع'}</button>
@@ -279,7 +321,16 @@ export default function SubjectDetailPage() {
           <form onSubmit={uploadImage} className="card p-4 mb-4 fade-up">
             <div className="grid md:grid-cols-2 gap-3 mb-3">
               <input className="input" placeholder="عنوان الصورة (اختياري)" value={uTitle} onChange={(e) => setUTitle(e.target.value)} />
-              <input type="file" accept="image/*" className="block w-full text-sm" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
+              {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
+            <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الصورة — ② العنوان اختياري — ③ اضغط «رفع الصورة»</div>
+            <div className="mb-3">
+              <Dropzone
+                accept="image/*"
+                file={uFile}
+                onPick={setUFile}
+                label="① اختر الصورة (PNG، JPG، WebP، GIF)"
+              />
+            </div>
             </div>
             {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
             <div className="text-[11px] text-[var(--muted)] mb-3">PNG، JPG، WebP أو GIF حتى 50 ميغابايت. تُحظر الصور غير اللائقة آليًا.</div>

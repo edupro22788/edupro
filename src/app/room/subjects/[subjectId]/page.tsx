@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Upload, Eye, Download, Trash2, Check, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Paperclip, Eye, Download, Trash2, Check, X, Image as ImageIcon } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import {
   Spinner, Empty, Modal, FileTypeIcon, StatusPill, TimeAgo, GenderDot, ReportButton,
@@ -33,39 +33,6 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
 }
 
-function Dropzone({ accept, file, onPick, label }: {
-  accept?: string;
-  file: File | null;
-  onPick: (f: File | null) => void;
-  label: string;
-}) {
-  return (
-    <label
-      className="block cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-6 text-center transition-colors hover:border-[var(--gold)]"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        const f = e.dataTransfer.files?.[0];
-        if (f) onPick(f);
-      }}
-    >
-      <input type="file" accept={accept} className="sr-only" onChange={(e) => onPick(e.target.files?.[0] || null)} />
-      <Upload size={22} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
-      {file ? (
-        <>
-          <div className="text-sm font-bold text-[var(--gold)] line-clamp-1">{file.name}</div>
-          <div className="text-[11px] text-[var(--muted)] mt-1">تم اختيار الملف — يمكنك تغييره بالنقر مجددًا</div>
-        </>
-      ) : (
-        <>
-          <div className="text-sm font-bold">{label}</div>
-          <div className="text-[11px] text-[var(--muted)] mt-1">انقر هنا لفتح نافذة اختيار الملف، أو اسحب الملف وأفلته هنا</div>
-        </>
-      )}
-    </label>
-  );
-}
-
 export default function SubjectDetailPage() {
   const params = useParams<{ id: string }>();
   const subjectId = params.id;
@@ -78,12 +45,7 @@ export default function SubjectDetailPage() {
   const [mine, setMine] = useState(false);
   const [pending, setPending] = useState(false);
 
-  const [showUpload, setShowUpload] = useState(true);
-  const [imgTitle, setImgTitle] = useState('');
-  const [uTitle, setUTitle] = useState('');
-  const [uDesc, setUDesc] = useState('');
-  const [uCat, setUCat] = useState('LESSON');
-  const [uFile, setUFile] = useState<File | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -112,45 +74,25 @@ export default function SubjectDetailPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('upload') === '1') {
-      setShowUpload(true);
+      setShowAdd(true);
     }
   }, []);
 
   useEffect(() => { load(); }, [subjectId, mine, pending]);
 
-  const upload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!uFile) return setError('اختر ملفًا');
-    if (uFile.type.startsWith('image/')) return setError('هذا ملف صورة — استخدم مربع «اختار الصورة» أسفله');
+  const doUpload = async (file: File, asImage: boolean) => {
+    if (asImage && !file.type.startsWith('image/')) return setError('الملف المحدد ليس صورة — استخدم «إدراج ملف»');
+    if (!asImage && file.type.startsWith('image/')) return setError('الملف المحدد صورة — استخدم «إضافة صورة»');
     setBusy(true); setError('');
     const fd = new FormData();
-    fd.set('title', uTitle);
-    fd.set('description', uDesc);
-    fd.set('category', uCat);
-    fd.set('subjectId', subjectId);
-    fd.set('file', uFile);
-    const r = await apiPost('/api/files', fd);
-    setBusy(false);
-    if (!r.ok) { setError(r.error); return; }
-    setUTitle(''); setUDesc(''); setUFile(null); setCat('');
-    load();
-  };
-
-  const uploadImage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!uFile) return setError('اختر صورة');
-    if (!uFile.type.startsWith('image/')) return setError('هنا تُرفع الصور فقط — استخدم مربع اختيار الملف بالأعلى');
-    setBusy(true); setError('');
-    const fd = new FormData();
-    fd.set('title', imgTitle.trim() || uFile.name);
-    fd.set('description', uDesc);
+    fd.set('title', file.name.replace(/\.[^.]+$/, '') || file.name);
     fd.set('category', 'FILE');
     fd.set('subjectId', subjectId);
-    fd.set('file', uFile);
+    fd.set('file', file);
     const r = await apiPost('/api/files', fd);
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setImgTitle(''); setUFile(null);
+    setShowAdd(false); setError('');
     load();
   };
 
@@ -202,69 +144,20 @@ export default function SubjectDetailPage() {
                   </p>
                 </div>
               </div>
-              <button className="btn btn-gold" onClick={() => setShowUpload((v) => !v)}>
-                {showUpload ? <X size={16} /> : <Upload size={16} />} إضافة ملف
-              </button>
             </div>
           </div>
         </>
       ) : (
-        <Empty title="المقياس غير موجود" hint="المقياس غير متاح لفوجك — تحقق من تسجيل الدخول بصفحتك الصحيحة" />
+        <Empty title="المقياس غير موجود" hint="إن كان المقياس من إنشائك اضغط «إضافة» للأعلى — وتأكد من تسجيل الدخول بحسابك الصحيح" />
       )}
 
-      {subject && showUpload && (
-        <div className="card p-5 mb-6 fade-up">
-          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject.name}»</h3>
-          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-
-          <form onSubmit={upload}>
-            <div className="grid md:grid-cols-2 gap-3 mb-3">
-              <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
-              <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
-                {CATEGORY_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}
-              </select>
-            </div>
-            <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
-            <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الملف — ② اكتب عنوان الملف بالأعلى — ③ اضغط «رفع الملف»</div>
-            <div className="mb-3">
-              <Dropzone
-                accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
-                file={uFile}
-                onPick={setUFile}
-                label="① اختر الملف (PDF، وورد، إكسل، PowerPoint...)"
-              />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-              <span className="text-[11px] text-[var(--muted)]">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</span>
-              <button type="submit" className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الملف'}</button>
-            </div>
-          </form>
-
-          <div className="flex items-center gap-3 mb-4">
-            <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
-            <span className="text-xs font-bold text-[var(--muted)]">أو أضف صورة للمقياس</span>
-            <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
-          </div>
-
-          <form onSubmit={uploadImage} className="md:grid md:grid-cols-2 md:gap-4 md:items-center">
-            <div>
-              <input className="input mb-3" placeholder="عنوان الصورة (اختياري)" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} />
-              <div className="mb-3">
-                <Dropzone
-                  accept="image/*"
-                  file={uFile}
-                  onPick={setUFile}
-                  label="① اختر الصورة (PNG، JPG، WebP، GIF)"
-                />
-              </div>
-              <div className="text-[11px] text-[var(--muted)] mb-3">PNG، JPG، WebP أو GIF حتى 50 ميغابايت. تُحظر الصور غير اللائقة آليًا.</div>
-            </div>
-            <div className="text-center md:text-left">
-              <button type="submit" className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الصورة'}</button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* الملفات */}
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h2 className="text-lg font-black flex items-center gap-2"><Paperclip size={17} /> الملفات ({docs.length})</h2>
+        <button className="btn btn-gold" disabled={busy} onClick={() => { setError(''); setShowAdd(true); }}>
+          <Plus size={16} /> إضافة
+        </button>
+      </div>
 
       {/* مرشحات */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -288,7 +181,7 @@ export default function SubjectDetailPage() {
       </div>
 
       {visibleDocs.length === 0 ? (
-        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة ملف» بالأعلى' : 'اضغط «إضافة ملف» بالأعلى لرفع PDF أو وورد أو غيرهما'} />
+        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة» بالأعلى' : 'اضغط «إضافة» بالأعلى ثم «إدراج ملف» لرفع PDF أو وورد أو غيرهما'} />
       ) : (
         <div className="space-y-2">
           {visibleDocs.map((f) => (
@@ -349,7 +242,7 @@ export default function SubjectDetailPage() {
         </div>
 
         {images.length === 0 ? (
-          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة ملف» بالأعلى ثم اختر صورة" />
+          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة» بالأعلى ثم «إضافة صورة»" />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((f) => (
@@ -395,6 +288,48 @@ export default function SubjectDetailPage() {
         )}
       </div>
       )}
+
+      {/* واجهة إضافة */}
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="أضف إلى المقياس">
+        <p className="text-sm text-[var(--muted)] mb-4">اختر نوع المحتوى وسيفتح لك مباشرة نافذة اختيار الملف:</p>
+        {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
+        {busy ? (
+          <div className="py-8 flex justify-center"><Spinner size={26} /></div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <label className="cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-5 text-center transition-colors hover:border-[var(--gold)]">
+              <input
+                type="file"
+                className="hidden"
+                accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  e.target.value = '';
+                  if (f) doUpload(f, false);
+                }}
+              />
+              <Paperclip size={26} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
+              <div className="text-sm font-black">إدراج ملف</div>
+              <div className="text-[11px] text-[var(--muted)] mt-1">PDF، Word، Excel، PowerPoint، مضغوط…</div>
+            </label>
+            <label className="cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-5 text-center transition-colors hover:border-[var(--gold)]">
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  e.target.value = '';
+                  if (f) doUpload(f, true);
+                }}
+              />
+              <ImageIcon size={26} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
+              <div className="text-sm font-black">إضافة صورة</div>
+              <div className="text-[11px] text-[var(--muted)] mt-1">PNG، JPG، WebP، GIF — تُفحص آليًا</div>
+            </label>
+          </div>
+        )}
+      </Modal>
 
       {/* معاينة */}
       <Modal open={Boolean(viewFile)} onClose={() => setViewId(null)} title={viewFile?.title || ''}>

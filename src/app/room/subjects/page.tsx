@@ -61,12 +61,14 @@ export default function SubjectsPage() {
           <h1 className="text-2xl font-black">المقاييس</h1>
           <p className="text-sm text-[var(--muted)]">دروس، ملخصات، مراجعات، محاضرات، تمارين وملفات لكل مقياس</p>
         </div>
-        <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? <X size={16} /> : <Plus size={16} />} مقياس جديد
-        </button>
+        {isSup && (
+          <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? <X size={16} /> : <Plus size={16} />} مقياس جديد
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {isSup && showForm && (
         <form onSubmit={create} className="card p-5 mb-6 fade-up">
           <h3 className="font-bold mb-3">إضافة مقياس</h3>
           <div className="grid md:grid-cols-3 gap-3 mb-3">
@@ -90,7 +92,7 @@ export default function SubjectsPage() {
       )}
 
       {subjects.length === 0 ? (
-        <Empty title="لا توجد مقاييس بعد" hint="انقر «مقياس جديد» لإنشاء أول مقياس" />
+        <Empty title="لا توجد مقاييس بعد" hint={isSup ? 'انقر «مقياس جديد» لإنشاء أول مقياس' : 'سيضيف مشرف الفوج المقاييس قريبًا'} />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {subjects.map((s) => (

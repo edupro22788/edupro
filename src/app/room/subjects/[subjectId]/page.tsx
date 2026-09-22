@@ -45,7 +45,8 @@ export default function SubjectDetailPage() {
       apiGet<{ isSupervisor: boolean }>('/api/room'),
       apiGet<{ subjects: Subject[] }>('/api/subjects'),
     ]);
-    if (room.ok) setIsSup(room.data.isSupervisor);
+    const sup = room.ok && room.data.isSupervisor;
+    setIsSup(sup);
     let found = subj.ok ? subj.data.subjects.find((s) => s.id === subjectId) || null : null;
     if (!found) {
       const one = await apiGet<{ subject: Subject }>(`/api/subjects/${subjectId}`);
@@ -55,6 +56,7 @@ export default function SubjectDetailPage() {
 
     if (found) {
       const q = new URLSearchParams({ subjectId });
+      if (sup) q.set('pending', '1');
       const r = await apiGet<{ files: FileItem[] }>(`/api/files?${q}`);
       if (r.ok) setFiles(r.data.files);
     }

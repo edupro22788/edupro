@@ -20,21 +20,28 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
-      const data = await res.json();
+      let data: { error?: string; user?: { role: string; hasGroup: boolean } } = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
       if (!res.ok) {
         setError(data.error || 'تعذر تسجيل الدخول');
         return;
       }
-      if (data.user.role === 'ADMIN') {
+      if (data.user?.role === 'ADMIN') {
         router.push('/admin');
-      } else if (!data.user.hasGroup) {
+      } else if (data.user && !data.user.hasGroup) {
         router.push('/onboarding');
       } else {
         router.push('/room');
       }
       router.refresh();
+    } catch {
+      setError('تعذر الوصول إلى الخادم، تحقق من اتصالك وأعد المحاولة');
     } finally {
       setBusy(false);
     }
@@ -50,12 +57,12 @@ export default function LoginPage() {
       <form onSubmit={submit} className="card w-full max-w-sm p-6 fade-up">
         <label className="label">البريد الإلكتروني</label>
         <input
-          className="input mb-4" type="email" value={email} dir="ltr" required
+          className="input mb-4" type="email" value={email} dir="ltr" required autoComplete="email" inputMode="email"
           onChange={(e) => setEmail(e.target.value)} placeholder="you@example.dz"
         />
         <label className="label">كلمة المرور</label>
         <input
-          className="input mb-4" type="password" value={password} dir="ltr" required
+          className="input mb-4" type="password" value={password} dir="ltr" required autoComplete="current-password"
           onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
         />
 

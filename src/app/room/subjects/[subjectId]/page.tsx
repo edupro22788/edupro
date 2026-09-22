@@ -71,6 +71,12 @@ export default function SubjectDetailPage() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('upload') === '1') {
+      setShowUpload(true);
+    }
+  }, []);
+
   useEffect(() => { load(); }, [subjectId, mine, pending]);
 
   const upload = async (e: React.FormEvent) => {

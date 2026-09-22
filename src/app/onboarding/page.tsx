@@ -20,11 +20,12 @@ export default function OnboardingPage() {
   const [states, setStates] = useState<Item[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [sel, setSel] = useState<Record<string, string>>({});
+  const [selName, setSelName] = useState<Record<string, string>>({});
   const [newGroup, setNewGroup] = useState('');
 
-  const order: StepKey[] = ['state', 'university', 'faculty', 'major', 'level', 'group'];
+  const order: StepKey[] = ['state', 'university', 'faculty', 'level', 'major', 'group'];
   const labels: Record<StepKey, string> = {
-    state: 'الولاية', university: 'الجامعة', faculty: 'الكلية', major: 'التخصص', level: 'المستوى', group: 'الفوج',
+    state: 'الولاية', university: 'الجامعة', faculty: 'الكلية', level: 'المستوى', major: 'التخصص', group: 'الفوج',
   };
 
   useEffect(() => {
@@ -39,24 +40,34 @@ export default function OnboardingPage() {
     })();
   }, [router]);
 
-  const pick2 = async (id: string) => {
+  const pick2 = async (item: Item) => {
+    const id = item.id;
     const key = order[order.indexOf(step)];
     setSel((s) => ({ ...s, [key]: id }));
+    setSelName((s) => ({ ...s, [key]: item.name }));
     setError('');
+
+    // اختيار التخصص يحدد المستوى الفعلي الخاص به (لذلك يعطّب sel.level)
+    if (key === 'major') {
+      const lvId = (item as { levelId?: string }).levelId;
+      if (lvId) setSel((s) => ({ ...s, level: lvId }));
+    }
+
     const nextIdx = order.indexOf(step) + 1;
     if (nextIdx >= order.length) return;
 
     const next = order[nextIdx];
-    const endpointMap: Record<string, string> = {
-      university: `/api/universities?stateId=${id}`,
-      faculty: `/api/faculties?universityId=${id}`,
-      major: `/api/majors?facultyId=${id}`,
-      level: `/api/levels?majorId=${id}`,
-      group: `/api/groups?levelId=${id}`,
-    };
-    const res = await apiGet<{ [k: string]: Item[] }>(endpointMap[next]);
+    let url = '';
+    if (next === 'university') url = `/api/universities?stateId=${id}`;
+    else if (next === 'faculty') url = `/api/faculties?universityId=${id}`;
+    else if (next === 'level') url = `/api/levels?facultyId=${id}`;
+    else if (next === 'major') url = `/api/majors?facultyId=${sel.faculty}&levelName=${encodeURIComponent(item.name)}`;
+    else if (next === 'group') url = `/api/groups?levelId=${(item as { levelId?: string }).levelId ?? ''}`;
+
+    const listKey = next === 'group' ? 'groups' : `${next}s`;
+    const res = await apiGet<{ [k: string]: Item[] }>(url);
     if (res.ok) {
-      setItems(res.data[next + 's'] || []);
+      setItems(res.data[listKey] || []);
     } else {
       setItems([]);
     }
@@ -101,7 +112,7 @@ export default function OnboardingPage() {
             {order.filter((k) => sel[k]).map((k, i) => (
               <span key={k} className="inline-flex items-center gap-2">
                 {i > 0 && <span className="sep">›</span>}
-                <span>{sel[k]}</span>
+                <span>{selName[k]}</span>
               </span>
             ))}
           </div>
@@ -119,7 +130,7 @@ export default function OnboardingPage() {
         {step === 'state' ? (
           <div className="max-h-72 overflow-y-auto grid grid-cols-2 gap-2">
             {states.map((s) => (
-              <button key={s.id} className="btn justify-between text-sm" onClick={() => pick2(s.id)}>
+              <button key={s.id} className="btn justify-between text-sm" onClick={() => pick2(s)}>
                 {s.name}
                 {!isGroupStep && <ChevronRight size={14} className="opacity-40" />}
               </button>
@@ -132,7 +143,7 @@ export default function OnboardingPage() {
             ) : (
               <div className="max-h-72 overflow-y-auto grid gap-2">
                 {items.map((it) => (
-                  <button key={it.id} className="btn justify-between text-sm text-right" onClick={() => pick2(it.id)}>
+                  <button key={it.id} className="btn justify-between text-sm text-right" onClick={() => pick2(it)}>
                     {it.name}
                     {typeof it.members === 'number' && (
                       <span className="text-xs text-[var(--muted)]">{it.members} عضو</span>

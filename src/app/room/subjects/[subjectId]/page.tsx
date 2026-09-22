@@ -1,26 +1,19 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Plus, Paperclip, Eye, Download, Trash2, Check, X, Image as ImageIcon } from 'lucide-react';
+import { Paperclip, Eye, Download, Trash2, Check, X, FileUp } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
-import {
-  Spinner, Empty, Modal, FileTypeIcon, StatusPill, TimeAgo, GenderDot, ReportButton,
-} from '@/components/ui';
-import { CATEGORY_ORDER, CATEGORY_LABELS } from '@/lib/constants';
-
-// إعادة تصدير بأسماء مقروءة
-const CATS: Record<string, string> = CATEGORY_LABELS;
+import { Spinner, Empty, Modal, FileTypeIcon, StatusPill, TimeAgo, ReportButton } from '@/components/ui';
 
 type Subject = { id: string; name: string; icon: string; color: string };
 type FileItem = {
-  id: string; title: string; description: string; category: string; status: string; rejectReason: string | null;
+  id: string; title: string; category: string; status: string; rejectReason: string | null;
   fileName: string; sizeBytes: number; mimeType: string; extLabel: string; createdAt: string;
-  uploader: { id: string; firstName: string; lastName: string; gender: 'MALE' | 'FEMALE' | null };
+  uploader: { id: string; firstName: string; lastName: string };
   canManage: boolean;
 };
-type FileWithSubject = FileItem & { subject: { id: string; name: string } | null };
 
 const ICON_LABEL: Record<string, string> = {
   academic: '🎓', brain: '🧠', stats: '📊', flask: '🧪', book: '📘', shield: '🛡️', scale: '⚖️', globe: '🌍', calculator: '🧮', microscope: '🔬',
@@ -37,18 +30,14 @@ export default function SubjectDetailPage() {
   const params = useParams<{ id: string }>();
   const subjectId = params.id;
 
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const [subject, setSubject] = useState<Subject | null>(null);
-  const [files, setFiles] = useState<FileWithSubject[]>([]);
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [isSup, setIsSup] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cat, setCat] = useState('');
-  const [mine, setMine] = useState(false);
-  const [pending, setPending] = useState(false);
-
-  const [showAdd, setShowAdd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-
   const [viewId, setViewId] = useState<string | null>(null);
 
   const load = async () => {
@@ -64,25 +53,22 @@ export default function SubjectDetailPage() {
     }
     setSubject(found);
 
-    const q = new URLSearchParams({ subjectId });
-    if (mine) q.set('mine', '1');
-    if (pending) q.set('pending', '1');
-    const r = await apiGet<{ files: FileWithSubject[] }>(`/api/files?${q}`);
-    if (r.ok) setFiles(r.data.files);
+    if (found) {
+      const q = new URLSearchParams({ subjectId });
+      const r = await apiGet<{ files: FileItem[] }>(`/api/files?${q}`);
+      if (r.ok) setFiles(r.data.files);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('upload') === '1') {
-      setShowAdd(true);
-    }
-  }, []);
+    const hasUpload = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('upload') === '1';
+    load();
+    if (hasUpload && fileRef.current) fileRef.current.click();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectId]);
 
-  useEffect(() => { load(); }, [subjectId, mine, pending]);
-
-  const doUpload = async (file: File, asImage: boolean) => {
-    if (asImage && !file.type.startsWith('image/')) return setError('الملف المحدد ليس صورة — استخدم «إدراج ملف»');
-    if (!asImage && file.type.startsWith('image/')) return setError('الملف المحدد صورة — استخدم «إضافة صورة»');
+  const doUpload = async (file: File) => {
     setBusy(true); setError('');
     const fd = new FormData();
     fd.set('title', file.name.replace(/\.[^.]+$/, '') || file.name);
@@ -92,7 +78,7 @@ export default function SubjectDetailPage() {
     const r = await apiPost('/api/files', fd);
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setShowAdd(false); setError('');
+    setError('');
     load();
   };
 
@@ -101,7 +87,7 @@ export default function SubjectDetailPage() {
     if (r.ok) load();
   };
 
-  const del = async (file: FileWithSubject) => {
+  const del = async (file: FileItem) => {
     if (!confirm(`حذف «${file.title}»؟`)) return;
     await apiPatch(`/api/files/${file.id}`, { action: 'delete' });
     load();
@@ -112,15 +98,25 @@ export default function SubjectDetailPage() {
     alert('تم إرسال البلاغ.');
   };
 
-  const isImage = (mime: string) => mime.startsWith('image/');
-  const isPdf = (mime: string) => mime === 'application/pdf';
-
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Spinner size={28} /></div>;
 
   const viewFile = files.find((f) => f.id === viewId) || null;
-  const images = files.filter((f) => f.mimeType.startsWith('image/'));
-  const docs = files.filter((f) => !f.mimeType.startsWith('image/'));
-  const visibleDocs = cat ? docs.filter((f) => f.category === cat) : docs;
+  const isImage = (mime: string) => mime.startsWith('image/');
+  const isPdf = (mime: string) => mime === 'application/pdf';
+
+  const uploadBox = subject ? (
+    <input
+      ref={fileRef}
+      type="file"
+      className="hidden"
+      accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,image/*"
+      onChange={(e) => {
+        const f = e.target.files?.[0] || null;
+        e.target.value = '';
+        if (f) doUpload(f);
+      }}
+    />
+  ) : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -132,206 +128,93 @@ export default function SubjectDetailPage() {
             <span className="current">{subject.name}</span>
           </div>
 
-          <div className="card p-6 mb-6 relative overflow-hidden fade-up">
+          <div className="card p-6 mb-6 fade-up relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(500px 180px at 85% 0%, ${subject.color}22, transparent 60%)` }} />
             <div className="relative flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="text-5xl">{ICON_LABEL[subject.icon]}</div>
+                <div className="text-5xl">{ICON_LABEL[subject.icon] || '📄'}</div>
                 <div>
                   <h1 className="text-2xl font-black">{subject.name}</h1>
-                  <p className="text-sm text-[var(--muted)]">
-                    شارك الدروس والملخصات والمراجعات والمحاضرات والتمارين للفوج
-                  </p>
+                  <p className="text-sm text-[var(--muted)]">أضف ملفك الدراسي وسيظهر هنا مع ملفات الفوج</p>
                 </div>
               </div>
+              <button className="btn btn-gold" disabled={busy} onClick={() => fileRef.current?.click()}>
+                {busy ? <Spinner /> : <FileUp size={16} />} إدراج ملف
+              </button>
             </div>
           </div>
-        </>
-      ) : (
-        <Empty title="المقياس غير موجود" hint="إن كان المقياس من إنشائك اضغط «إضافة» للأعلى — وتأكد من تسجيل الدخول بحسابك الصحيح" />
-      )}
+          {uploadBox}
 
-      {/* الملفات */}
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-lg font-black flex items-center gap-2"><Paperclip size={17} /> الملفات ({docs.length})</h2>
-        <button className="btn btn-gold" disabled={busy} onClick={() => { setError(''); setShowAdd(true); }}>
-          <Plus size={16} /> إضافة
-        </button>
-      </div>
+          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
 
-      {/* مرشحات */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <button className={`btn text-sm px-3 py-1.5 ${cat === '' ? 'btn-gold' : ''}`} onClick={() => { setCat(''); }}>
-          الكل
-        </button>
-        {CATEGORY_ORDER.map((k) => (
-          <button key={k} className={`btn text-sm px-3 py-1.5 ${cat === k ? 'btn-gold' : ''}`} onClick={() => setCat(k)}>
-            {CATS[k]}
-          </button>
-        ))}
-        <span className="flex-1" />
-        <label className="inline-flex items-center gap-1.5 text-xs text-[var(--muted)]">
-          <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> ملفاتي فقط
-        </label>
-        {isSup && (
-          <label className="inline-flex items-center gap-1.5 text-xs text-[var(--muted)]">
-            <input type="checkbox" checked={pending} onChange={(e) => setPending(e.target.checked)} /> قيد المراجعة
-          </label>
-        )}
-      </div>
+          <h2 className="text-lg font-black flex items-center gap-2 mb-3"><Paperclip size={18} /> جميع الملفات ({files.length})</h2>
 
-      {visibleDocs.length === 0 ? (
-        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة» بالأعلى' : 'اضغط «إضافة» بالأعلى ثم «إدراج ملف» لرفع PDF أو وورد أو غيرهما'} />
-      ) : (
-        <div className="space-y-2">
-          {visibleDocs.map((f) => (
-            <div key={f.id} className="card p-3.5 flex items-center gap-3 fade-up" style={{ borderColor: cat === f.category ? 'rgba(201,169,98,.35)' : undefined }}>
-              <FileTypeIcon mimeType={f.mimeType} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold">{f.title}</span>
-                  <StatusPill status={f.status} />
-                  <span className="text-[11px] rounded-md px-1.5 py-0.5" style={{ background: 'rgba(15,12,5,.045)', color: 'var(--muted)' }}>{CATS[f.category]}</span>
-                  {f.status === 'REJECTED' && f.rejectReason && (
-                    <span className="text-[11px] text-[#ff9b94]">— {f.rejectReason}</span>
+          {files.length === 0 ? (
+            <button className="w-full card border-2 border-dashed p-10 text-center hover:opacity-80" onClick={() => fileRef.current?.click()}>
+              <FileUp size={30} className="mx-auto mb-3" style={{ color: 'var(--gold)' }} />
+              <div className="font-black">لا توجد ملفات بعد</div>
+              <div className="text-sm text-[var(--muted)] mt-1">انقر هنا لإدراج ملفك الدراسي (صورة أو ملف)</div>
+            </button>
+          ) : (
+            <div className="rounded-2xl border border-[var(--line)] overflow-hidden">
+              {files.map((f, i) => (
+                <div key={f.id} className={`flex items-center gap-3 p-3.5 ${i > 0 ? 'border-t border-[var(--line)]' : ''} fade-up`}>
+                  {isImage(f.mimeType) && f.status === 'PUBLISHED' ? (
+                    <button onClick={() => setViewId(f.id)} className="shrink-0 rounded-xl overflow-hidden w-14 h-14 border border-[var(--line)]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/api/files/${f.id}/content`} alt={f.title} className="w-14 h-14 object-cover" />
+                    </button>
+                  ) : (
+                    <FileTypeIcon mimeType={f.mimeType} />
                   )}
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--muted)]">
-                  <span className="inline-flex items-center gap-1"><GenderDot gender={f.uploader.gender} size={15} />{f.uploader.firstName} {f.uploader.lastName}</span>
-                  <span>·</span><span>{f.extLabel} {formatBytes(f.sizeBytes)}</span>
-                  <span>·</span><TimeAgo date={f.createdAt} />
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {f.status === 'PUBLISHED' && (
-                  <>
-                    <button className="btn btn-ghost p-2" onClick={() => setViewId(f.id)} title="عرض"><Eye size={16} /></button>
-                    <a className="btn btn-ghost p-2" href={`/api/files/${f.id}/download`} title="تحميل"><Download size={16} /></a>
-                  </>
-                )}
-                {(f.status === 'PENDING' || f.status === 'REJECTED') && f.canManage && (
-                  <a className="btn btn-ghost p-2" href={`/api/files/${f.id}/content`} target="_blank" title="معاينة"><Eye size={16} /></a>
-                )}
-                {isSup && (f.status === 'PENDING' || f.status === 'REJECTED') && (
-                  <>
-                    <button className="btn btn-ghost p-2" style={{ color: 'var(--ok)' }} onClick={() => act(f.id, 'approve')} title="نشر"><Check size={16} /></button>
-                    <button className="btn btn-ghost p-2" style={{ color: '#ff9b94' }} onClick={() => {
-                      const reason = window.prompt('سبب الرفض:', 'محتوى غير مناسب');
-                      if (reason !== null) act(f.id, 'reject', { reason });
-                    }} title="رفض"><X size={16} /></button>
-                  </>
-                )}
-                {f.canManage && <button className="btn btn-ghost p-2" style={{ color: '#ff9b94' }} onClick={() => del(f)} title="حذف"><Trash2 size={16} /></button>}
-                {f.uploader.id !== null && !f.canManage && (
-                  <ReportButton onReport={(reason) => report(f.id, reason)} />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* الصور */}
-      {subject && (
-      <div className="mt-10">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div>
-            <h2 className="text-lg font-black flex items-center gap-2"><ImageIcon size={18} /> الصور</h2>
-            <p className="text-xs text-[var(--muted)]">صور المقياس — تُفحص آليًا وتُمرر عبر مراجعة المشرف قبل النشر</p>
-          </div>
-        </div>
-
-        {images.length === 0 ? (
-          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة» بالأعلى ثم «إضافة صورة»" />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {images.map((f) => (
-              <div key={f.id} className="card overflow-hidden fade-up">
-                {f.status === 'PUBLISHED' ? (
-                  <button className="block w-full" onClick={() => setViewId(f.id)}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/api/files/${f.id}/content`} alt={f.title} className="w-full h-32 object-cover" />
-                  </button>
-                ) : (
-                  <div className="w-full h-32 flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(15,12,5,.05)' }}>
-                    <StatusPill status={f.status} />
-                    {f.status === 'REJECTED' && f.rejectReason && (
-                      <span className="text-[10px] text-[#ff9b94] px-2 text-center">{f.rejectReason}</span>
-                    )}
-                  </div>
-                )}
-                <div className="p-2.5">
-                  <div className="text-xs font-bold line-clamp-1">{f.title}</div>
-                  <div className="flex items-center justify-between gap-1 mt-1">
-                    <span className="text-[10px] text-[var(--muted)]">{f.uploader.firstName} {f.uploader.lastName}</span>
-                    <div className="flex items-center gap-1">
-                      {f.status === 'PUBLISHED' && (
-                        <a className="btn btn-ghost p-1.5" href={`/api/files/${f.id}/download`} title="تحميل"><Download size={13} /></a>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold">{f.title}</span>
+                      <StatusPill status={f.status} />
+                      {f.status === 'REJECTED' && f.rejectReason && (
+                        <span className="text-[11px] text-[#ff9b94]">— {f.rejectReason}</span>
                       )}
-                      {isSup && (f.status === 'PENDING' || f.status === 'REJECTED') && (
-                        <>
-                          <button className="btn btn-ghost p-1.5" style={{ color: 'var(--ok)' }} onClick={() => act(f.id, 'approve')} title="نشر"><Check size={13} /></button>
-                          <button className="btn btn-ghost p-1.5" style={{ color: '#ff9b94' }} onClick={() => {
-                            const reason = window.prompt('سبب الرفض:', 'محتوى غير مناسب');
-                            if (reason !== null) act(f.id, 'reject', { reason });
-                          }} title="رفض"><X size={13} /></button>
-                        </>
-                      )}
-                      {f.canManage && <button className="btn btn-ghost p-1.5" style={{ color: '#ff9b94' }} onClick={() => del(f)} title="حذف"><Trash2 size={13} /></button>}
-                      {!f.canManage && <ReportButton onReport={(reason) => report(f.id, reason)} />}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--muted)]">
+                      <span>{f.uploader.firstName} {f.uploader.lastName}</span>
+                      <span>·</span><span>{f.extLabel} {formatBytes(f.sizeBytes)}</span>
+                      <span>·</span><TimeAgo date={f.createdAt} />
                     </div>
                   </div>
+                  <div className="flex items-center gap-1">
+                    {f.status === 'PUBLISHED' && (
+                      <>
+                        <button className="btn btn-ghost p-2" onClick={() => setViewId(f.id)} title="عرض"><Eye size={16} /></button>
+                        <a className="btn btn-ghost p-2" href={`/api/files/${f.id}/download`} title="تحميل"><Download size={16} /></a>
+                      </>
+                    )}
+                    {(f.status === 'PENDING' || f.status === 'REJECTED') && f.canManage && (
+                      <a className="btn btn-ghost p-2" href={`/api/files/${f.id}/content`} target="_blank" title="معاينة"><Eye size={16} /></a>
+                    )}
+                    {isSup && (f.status === 'PENDING' || f.status === 'REJECTED') && (
+                      <>
+                        <button className="btn btn-ghost p-2" style={{ color: 'var(--ok)' }} onClick={() => act(f.id, 'approve')} title="نشر"><Check size={16} /></button>
+                        <button className="btn btn-ghost p-2" style={{ color: '#ff9b94' }} onClick={() => {
+                          const reason = window.prompt('سبب الرفض:', 'محتوى غير مناسب');
+                          if (reason !== null) act(f.id, 'reject', { reason });
+                        }} title="رفض"><X size={16} /></button>
+                      </>
+                    )}
+                    {f.canManage && <button className="btn btn-ghost p-2" style={{ color: '#ff9b94' }} onClick={() => del(f)} title="حذف"><Trash2 size={16} /></button>}
+                    {!f.canManage && <ReportButton onReport={(reason) => report(f.id, reason)} />}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <Empty title="المقياس غير متوفر" hint="تأكد من تسجيل الدخول بحسابك الصحيح وافتح المقياس من صفحة المقاييس" />
+          <div className="text-center mt-3"><Link className="btn btn-gold" href="/room/subjects">العودة إلى المقاييس</Link></div>
+        </>
       )}
 
-      {/* واجهة إضافة */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="أضف إلى المقياس">
-        <p className="text-sm text-[var(--muted)] mb-4">اختر نوع المحتوى وسيفتح لك مباشرة نافذة اختيار الملف:</p>
-        {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-        {busy ? (
-          <div className="py-8 flex justify-center"><Spinner size={26} /></div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <label className="cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-5 text-center transition-colors hover:border-[var(--gold)]">
-              <input
-                type="file"
-                className="hidden"
-                accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] || null;
-                  e.target.value = '';
-                  if (f) doUpload(f, false);
-                }}
-              />
-              <Paperclip size={26} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
-              <div className="text-sm font-black">إدراج ملف</div>
-              <div className="text-[11px] text-[var(--muted)] mt-1">PDF، Word، Excel، PowerPoint، مضغوط…</div>
-            </label>
-            <label className="cursor-pointer rounded-xl border-2 border-dashed border-[var(--line)] p-5 text-center transition-colors hover:border-[var(--gold)]">
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] || null;
-                  e.target.value = '';
-                  if (f) doUpload(f, true);
-                }}
-              />
-              <ImageIcon size={26} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
-              <div className="text-sm font-black">إضافة صورة</div>
-              <div className="text-[11px] text-[var(--muted)] mt-1">PNG، JPG، WebP، GIF — تُفحص آليًا</div>
-            </label>
-          </div>
-        )}
-      </Modal>
-
-      {/* معاينة */}
       <Modal open={Boolean(viewFile)} onClose={() => setViewId(null)} title={viewFile?.title || ''}>
         {viewFile && (
           <div>

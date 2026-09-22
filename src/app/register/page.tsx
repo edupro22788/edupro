@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LEVELS = ['ليسانس 1', 'ليسانس 2', 'ليسانس 3', 'ماستر 1', 'ماستر 2'];
 
-type Item = { id: string; name: string; members?: number };
+type Item = { id: string; name: string; members?: number; levelId?: string };
 type Step = 'data' | 'institution' | 'level' | 'branch' | 'group';
 
 export default function RegisterPage() {
@@ -107,7 +107,7 @@ export default function RegisterPage() {
     setBusy(true); setError('');
     setMajorId(''); setStudyLevelId(''); setGroups([]); setGroupId(''); setNewGroupName('');
     try {
-      const r = await fetch(`/api/majors?facultyId=${facultyId}`);
+      const r = await fetch(`/api/majors?facultyId=${facultyId}&levelName=${encodeURIComponent(levelName)}`);
       const d = await r.json();
       setMajors(d.majors || []);
       setStep('branch');
@@ -117,12 +117,10 @@ export default function RegisterPage() {
   const pickBranch = async (id: string) => {
     setMajorId(id); setStudyLevelId(''); setGroups([]); setGroupId(''); setNewGroupName(''); setError('');
     if (!id) return;
-    const r = await fetch(`/api/levels?majorId=${id}`);
-    const d = await r.json();
-    const lv = (d.levels || []).find((l: Item) => l.name === levelName);
-    if (!lv) { setError('هذا الفرع غير متاح في المستوى المختار'); return; }
-    setStudyLevelId(lv.id);
-    const g = await fetch(`/api/groups?levelId=${lv.id}`);
+    const m = majors.find((x) => x.id === id);
+    if (!m?.levelId) { setError('هذا الفرع غير متاح في المستوى المختار'); return; }
+    setStudyLevelId(m.levelId);
+    const g = await fetch(`/api/groups?levelId=${m.levelId}`);
     const gd = await g.json();
     setGroups(gd.groups || []);
   };

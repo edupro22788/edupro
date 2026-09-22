@@ -45,8 +45,8 @@ export default function SubjectDetailPage() {
   const [mine, setMine] = useState(false);
   const [pending, setPending] = useState(false);
 
-  const [showUpload, setShowUpload] = useState(false);
-  const [showImageForm, setShowImageForm] = useState(false);
+  const [showUpload, setShowUpload] = useState(true);
+  const [showImageForm, setShowImageForm] = useState(true);
   const [uTitle, setUTitle] = useState('');
   const [uDesc, setUDesc] = useState('');
   const [uCat, setUCat] = useState('LESSON');
@@ -174,6 +174,23 @@ export default function SubjectDetailPage() {
         <Empty title="المقياس غير موجود" />
       )}
 
+      {showUpload && (
+        <form onSubmit={upload} className="card p-5 mb-6 fade-up">
+          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject?.name}»</h3>
+          <div className="grid md:grid-cols-2 gap-3 mb-3">
+            <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
+            <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
+              {CATEGORY_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}
+            </select>
+          </div>
+          <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
+          <input type="file" accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar" className="block w-full text-sm mb-3" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
+          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
+          <div className="text-[11px] text-[var(--muted)] mb-3">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
+          <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع'}</button>
+        </form>
+      )}
+
       {/* مرشحات */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <button className={`btn text-sm px-3 py-1.5 ${cat === '' ? 'btn-gold' : ''}`} onClick={() => { setCat(''); }}>
@@ -194,23 +211,6 @@ export default function SubjectDetailPage() {
           </label>
         )}
       </div>
-
-      {showUpload && (
-        <form onSubmit={upload} className="card p-5 mb-6 fade-up">
-          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject?.name}»</h3>
-          <div className="grid md:grid-cols-2 gap-3 mb-3">
-            <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
-            <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
-              {CATEGORY_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}
-            </select>
-          </div>
-          <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
-          <input type="file" accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar" className="block w-full text-sm mb-3" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
-          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-          <div className="text-[11px] text-[var(--muted)] mb-3">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
-          <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع'}</button>
-        </form>
-      )}
 
       {visibleDocs.length === 0 ? (
         <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة ملفات» بالأعلى' : 'اضغط «إضافة ملفات» بالأعلى لرفع PDF أو وورد أو غيرهما'} />

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import {
-  requireApiUser, ok, apiError, ApiGuardError, isApiSupervisor, canAccessSubject,
+  requireApiUser, ok, apiError, ApiGuardError, isApiSupervisor,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { notifyGroup } from '@/lib/notifications';
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   if (subjectId) {
     const subj = await prisma.subject.findUnique({ where: { id: subjectId } });
-    if (!subj || !canAccessSubject(user, subj)) return apiError('المقياس غير موجود', 404);
+    if (!subj) return apiError('المقياس غير موجود', 404);
     where = { subjectId: subj.id };
   }
   if (category && category in CONTENT_CATEGORIES) where.category = category;
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   let groupId = user.membership?.groupId ?? null;
   if (subjectIdRaw) {
     const subj = await prisma.subject.findUnique({ where: { id: subjectIdRaw } });
-    if (!subj || !canAccessSubject(user, subj)) return apiError('المقياس غير محدد بشكل صحيح');
+    if (!subj) return apiError('المقياس غير محدد بشكل صحيح');
     subjectId = subj.id;
     groupId = subj.groupId;
   }

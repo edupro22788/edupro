@@ -100,9 +100,10 @@ export async function POST(req: NextRequest) {
   let groupId = user.membership?.groupId ?? null;
   if (subjectIdRaw) {
     const subj = await prisma.subject.findUnique({ where: { id: subjectIdRaw } });
-    if (!subj) return apiError('المقياس غير محدد بشكل صحيح');
-    subjectId = subj.id;
-    groupId = subj.groupId;
+    if (subj) {
+      subjectId = subj.id;
+      groupId = subj.groupId;
+    }
   }
   if (!groupId) return apiError('يجب تحديد فوجك أولًا', 403);
   const buffer = Buffer.from(await file.arrayBuffer());

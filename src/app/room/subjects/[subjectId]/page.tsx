@@ -87,7 +87,7 @@ export default function SubjectDetailPage() {
     const fd = new FormData();
     fd.set('title', file.name.replace(/\.[^.]+$/, '') || file.name);
     fd.set('category', 'FILE');
-    fd.set('subjectId', subjectId);
+    fd.set('subjectId', subject ? subject.id : '');
     fd.set('file', file);
     const r = await apiPost('/api/files', fd);
     setBusy(false);

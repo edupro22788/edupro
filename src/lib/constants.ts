@@ -59,7 +59,12 @@ export const ALLOWED_FILE_EXTS = [
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/zip',
+  'application/x-zip-compressed',
+  'application/x-zip',
   'application/x-rar-compressed',
+  'application/vnd.rar',
+  'application/x-tar',
+  'application/octet-stream',
 ];
 
 export const FILE_EXT_LABEL: Record<string, string> = {
@@ -76,7 +81,12 @@ export const FILE_EXT_LABEL: Record<string, string> = {
   'application/vnd.ms-excel': 'Excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
   'application/zip': 'مضغوط',
+  'application/x-zip-compressed': 'مضغوط',
+  'application/x-zip': 'مضغوط',
   'application/x-rar-compressed': 'مضغوط',
+  'application/vnd.rar': 'مضغوط',
+  'application/x-tar': 'مضغوط',
+  'application/octet-stream': 'ملف',
 };
 
 export const DAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];

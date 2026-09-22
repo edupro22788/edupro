@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Upload, Eye, Download, Trash2, Check, X } from 'lucide-react';
+import { Upload, Eye, Download, Trash2, Check, X, Image as ImageIcon } from 'lucide-react';
 import { apiGet, apiPost, apiPatch } from '@/lib/client';
 import {
   Spinner, Empty, Modal, FileTypeIcon, StatusPill, TimeAgo, GenderDot, ReportButton,
@@ -46,6 +46,7 @@ export default function SubjectDetailPage() {
   const [pending, setPending] = useState(false);
 
   const [showUpload, setShowUpload] = useState(false);
+  const [showImageForm, setShowImageForm] = useState(false);
   const [uTitle, setUTitle] = useState('');
   const [uDesc, setUDesc] = useState('');
   const [uCat, setUCat] = useState('LESSON');
@@ -82,6 +83,7 @@ export default function SubjectDetailPage() {
   const upload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uFile) return setError('اختر ملفًا');
+    if (uFile.type.startsWith('image/')) return setError('لإضافة صورة استخدم زر «إضافة صورة» في قسم الصور بالأسفل');
     setBusy(true); setError('');
     const fd = new FormData();
     fd.set('title', uTitle);
@@ -93,6 +95,24 @@ export default function SubjectDetailPage() {
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
     setShowUpload(false); setUTitle(''); setUDesc(''); setUFile(null); setCat('');
+    load();
+  };
+
+  const uploadImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uFile) return setError('اختر صورة');
+    if (!uFile.type.startsWith('image/')) return setError('يمكن رفع الصور فقط في هذا القسم');
+    setBusy(true); setError('');
+    const fd = new FormData();
+    fd.set('title', uTitle.trim() || uFile.name);
+    fd.set('description', uDesc);
+    fd.set('category', 'FILE');
+    fd.set('subjectId', subjectId);
+    fd.set('file', uFile);
+    const r = await apiPost('/api/files', fd);
+    setBusy(false);
+    if (!r.ok) { setError(r.error); return; }
+    setShowImageForm(false); setUFile(null); setUTitle(''); setUDesc('');
     load();
   };
 
@@ -118,6 +138,9 @@ export default function SubjectDetailPage() {
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Spinner size={28} /></div>;
 
   const viewFile = files.find((f) => f.id === viewId) || null;
+  const images = files.filter((f) => f.mimeType.startsWith('image/'));
+  const docs = files.filter((f) => !f.mimeType.startsWith('image/'));
+  const visibleDocs = cat ? docs.filter((f) => f.category === cat) : docs;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -142,7 +165,7 @@ export default function SubjectDetailPage() {
                 </div>
               </div>
               <button className="btn btn-gold" onClick={() => setShowUpload((v) => !v)}>
-                <Upload size={16} /> رفع ملف
+                <Upload size={16} /> إضافة ملفات
               </button>
             </div>
           </div>
@@ -174,7 +197,7 @@ export default function SubjectDetailPage() {
 
       {showUpload && (
         <form onSubmit={upload} className="card p-5 mb-6 fade-up">
-          <h3 className="font-bold mb-3">رفع ملف إلى «{subject?.name}»</h3>
+          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject?.name}»</h3>
           <div className="grid md:grid-cols-2 gap-3 mb-3">
             <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
             <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
@@ -182,18 +205,18 @@ export default function SubjectDetailPage() {
             </select>
           </div>
           <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
-          <input type="file" className="block w-full text-sm mb-3" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
+          <input type="file" accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar" className="block w-full text-sm mb-3" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
           {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-          <div className="text-[11px] text-[var(--muted)] mb-3">PDF، صور، مستندات Word/Excel/PowerPoint، نص، أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
+          <div className="text-[11px] text-[var(--muted)] mb-3">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
           <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع'}</button>
         </form>
       )}
 
-      {files.length === 0 ? (
-        <Empty title="لا توجد ملفات هنا" hint="ارفع أول ملف لتشارك زملاءك" />
+      {visibleDocs.length === 0 ? (
+        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة ملفات» بالأعلى' : 'اضغط «إضافة ملفات» بالأعلى لرفع PDF أو وورد أو غيرهما'} />
       ) : (
         <div className="space-y-2">
-          {files.map((f) => (
+          {visibleDocs.map((f) => (
             <div key={f.id} className="card p-3.5 flex items-center gap-3 fade-up" style={{ borderColor: cat === f.category ? 'rgba(201,169,98,.35)' : undefined }}>
               <FileTypeIcon mimeType={f.mimeType} />
               <div className="flex-1 min-w-0">
@@ -239,6 +262,77 @@ export default function SubjectDetailPage() {
           ))}
         </div>
       )}
+
+      {/* الصور */}
+      <div className="mt-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-black flex items-center gap-2"><ImageIcon size={18} /> الصور</h2>
+            <p className="text-xs text-[var(--muted)]">صور المقياس — تُفحص آليًا وتُمرر عبر مراجعة المشرف قبل النشر</p>
+          </div>
+          <button className="btn btn-gold" onClick={() => setShowImageForm((v) => !v)}>
+            {showImageForm ? <X size={16} /> : <ImageIcon size={16} />} إضافة صورة
+          </button>
+        </div>
+
+        {showImageForm && (
+          <form onSubmit={uploadImage} className="card p-4 mb-4 fade-up">
+            <div className="grid md:grid-cols-2 gap-3 mb-3">
+              <input className="input" placeholder="عنوان الصورة (اختياري)" value={uTitle} onChange={(e) => setUTitle(e.target.value)} />
+              <input type="file" accept="image/*" className="block w-full text-sm" onChange={(e) => setUFile(e.target.files?.[0] || null)} />
+            </div>
+            {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
+            <div className="text-[11px] text-[var(--muted)] mb-3">PNG، JPG، WebP أو GIF حتى 50 ميغابايت. تُحظر الصور غير اللائقة آليًا.</div>
+            <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الصورة'}</button>
+          </form>
+        )}
+
+        {images.length === 0 ? (
+          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة صورة» لرفع أول صورة للمقياس" />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {images.map((f) => (
+              <div key={f.id} className="card overflow-hidden fade-up">
+                {f.status === 'PUBLISHED' ? (
+                  <button className="block w-full" onClick={() => setViewId(f.id)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/api/files/${f.id}/content`} alt={f.title} className="w-full h-32 object-cover" />
+                  </button>
+                ) : (
+                  <div className="w-full h-32 flex flex-col items-center justify-center gap-1" style={{ background: 'rgba(15,12,5,.05)' }}>
+                    <StatusPill status={f.status} />
+                    {f.status === 'REJECTED' && f.rejectReason && (
+                      <span className="text-[10px] text-[#ff9b94] px-2 text-center">{f.rejectReason}</span>
+                    )}
+                  </div>
+                )}
+                <div className="p-2.5">
+                  <div className="text-xs font-bold line-clamp-1">{f.title}</div>
+                  <div className="flex items-center justify-between gap-1 mt-1">
+                    <span className="text-[10px] text-[var(--muted)]">{f.uploader.firstName} {f.uploader.lastName}</span>
+                    <div className="flex items-center gap-1">
+                      {f.status === 'PUBLISHED' && (
+                        <a className="btn btn-ghost p-1.5" href={`/api/files/${f.id}/download`} title="تحميل"><Download size={13} /></a>
+                      )}
+                      {isSup && (f.status === 'PENDING' || f.status === 'REJECTED') && (
+                        <>
+                          <button className="btn btn-ghost p-1.5" style={{ color: 'var(--ok)' }} onClick={() => act(f.id, 'approve')} title="نشر"><Check size={13} /></button>
+                          <button className="btn btn-ghost p-1.5" style={{ color: '#ff9b94' }} onClick={() => {
+                            const reason = window.prompt('سبب الرفض:', 'محتوى غير مناسب');
+                            if (reason !== null) act(f.id, 'reject', { reason });
+                          }} title="رفض"><X size={13} /></button>
+                        </>
+                      )}
+                      {f.canManage && <button className="btn btn-ghost p-1.5" style={{ color: '#ff9b94' }} onClick={() => del(f)} title="حذف"><Trash2 size={13} /></button>}
+                      {!f.canManage && <ReportButton onReport={(reason) => report(f.id, reason)} />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* معاينة */}
       <Modal open={Boolean(viewFile)} onClose={() => setViewId(null)} title={viewFile?.title || ''}>

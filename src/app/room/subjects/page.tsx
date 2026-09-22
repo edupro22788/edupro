@@ -116,7 +116,7 @@ export default function SubjectsPage() {
               <div className="flex items-center gap-2 mt-2">
                 <button className="btn btn-ghost text-[11px] font-bold flex-1 justify-center" style={{ color: 'var(--gold)' }}
                   onClick={() => router.push(`/room/subjects/${s.id}?upload=1`)}>
-                  <Upload size={13} className="inline-block ml-1" /> إضافة ملفات وصور
+                  <Upload size={13} className="inline-block ml-1" /> إضافة ملف
                 </button>
               </div>
             </div>

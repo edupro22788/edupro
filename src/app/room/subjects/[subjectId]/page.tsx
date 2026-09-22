@@ -79,7 +79,7 @@ export default function SubjectDetailPage() {
   const [pending, setPending] = useState(false);
 
   const [showUpload, setShowUpload] = useState(true);
-  const [showImageForm, setShowImageForm] = useState(true);
+  const [imgTitle, setImgTitle] = useState('');
   const [uTitle, setUTitle] = useState('');
   const [uDesc, setUDesc] = useState('');
   const [uCat, setUCat] = useState('LESSON');
@@ -116,7 +116,7 @@ export default function SubjectDetailPage() {
   const upload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uFile) return setError('اختر ملفًا');
-    if (uFile.type.startsWith('image/')) return setError('لإضافة صورة استخدم زر «إضافة صورة» في قسم الصور بالأسفل');
+    if (uFile.type.startsWith('image/')) return setError('هذا ملف صورة — استخدم مربع «اختار الصورة» أسفله');
     setBusy(true); setError('');
     const fd = new FormData();
     fd.set('title', uTitle);
@@ -127,17 +127,17 @@ export default function SubjectDetailPage() {
     const r = await apiPost('/api/files', fd);
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setShowUpload(false); setUTitle(''); setUDesc(''); setUFile(null); setCat('');
+    setUTitle(''); setUDesc(''); setUFile(null); setCat('');
     load();
   };
 
   const uploadImage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uFile) return setError('اختر صورة');
-    if (!uFile.type.startsWith('image/')) return setError('يمكن رفع الصور فقط في هذا القسم');
+    if (!uFile.type.startsWith('image/')) return setError('هنا تُرفع الصور فقط — استخدم مربع اختيار الملف بالأعلى');
     setBusy(true); setError('');
     const fd = new FormData();
-    fd.set('title', uTitle.trim() || uFile.name);
+    fd.set('title', imgTitle.trim() || uFile.name);
     fd.set('description', uDesc);
     fd.set('category', 'FILE');
     fd.set('subjectId', subjectId);
@@ -145,7 +145,7 @@ export default function SubjectDetailPage() {
     const r = await apiPost('/api/files', fd);
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
-    setShowImageForm(false); setUFile(null); setUTitle(''); setUDesc('');
+    setImgTitle(''); setUFile(null);
     load();
   };
 
@@ -198,7 +198,7 @@ export default function SubjectDetailPage() {
                 </div>
               </div>
               <button className="btn btn-gold" onClick={() => setShowUpload((v) => !v)}>
-                <Upload size={16} /> إضافة ملفات
+                {showUpload ? <X size={16} /> : <Upload size={16} />} إضافة ملف
               </button>
             </div>
           </div>
@@ -208,29 +208,57 @@ export default function SubjectDetailPage() {
       )}
 
       {subject && showUpload && (
-        <form onSubmit={upload} className="card p-5 mb-6 fade-up">
-          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject?.name}»</h3>
-          <div className="grid md:grid-cols-2 gap-3 mb-3">
-            <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
-            <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
-              {CATEGORY_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}
-            </select>
-          </div>
-          <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
+        <div className="card p-5 mb-6 fade-up">
+          <h3 className="font-bold mb-3">إضافة ملف إلى «{subject.name}»</h3>
           {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-          <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الملف — ② اكتب عنوان الملف بالأعلى — ③ اضغط «رفع»</div>
-          <div className="mb-3">
-            <Dropzone
-              accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
-              file={uFile}
-              onPick={setUFile}
-              label="① اختر الملف (PDF، وورد، إكسل، PowerPoint...)"
-            />
+
+          <form onSubmit={upload}>
+            <div className="grid md:grid-cols-2 gap-3 mb-3">
+              <input className="input" placeholder="عنوان الملف" value={uTitle} required onChange={(e) => setUTitle(e.target.value)} />
+              <select className="input" value={uCat} onChange={(e) => setUCat(e.target.value)}>
+                {CATEGORY_ORDER.map((k) => <option key={k} value={k}>{CATS[k]}</option>)}
+              </select>
+            </div>
+            <textarea className="input mb-3" rows={2} placeholder="وصف مختصر (اختياري)" value={uDesc} onChange={(e) => setUDesc(e.target.value)} />
+            <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الملف — ② اكتب عنوان الملف بالأعلى — ③ اضغط «رفع الملف»</div>
+            <div className="mb-3">
+              <Dropzone
+                accept="application/pdf,text/plain,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
+                file={uFile}
+                onPick={setUFile}
+                label="① اختر الملف (PDF، وورد، إكسل، PowerPoint...)"
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <span className="text-[11px] text-[var(--muted)]">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</span>
+              <button type="submit" className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الملف'}</button>
+            </div>
+          </form>
+
+          <div className="flex items-center gap-3 mb-4">
+            <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
+            <span className="text-xs font-bold text-[var(--muted)]">أو أضف صورة للمقياس</span>
+            <span className="h-px flex-1" style={{ background: 'var(--line)' }} />
           </div>
-          {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-          <div className="text-[11px] text-[var(--muted)] mb-3">PDF، Word، Excel، PowerPoint، نص أو ملفات مضغوطة — حتى 50 ميغابايت. الملف بانتظار مراجعة المشرف قبل النشر.</div>
-          <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع'}</button>
-        </form>
+
+          <form onSubmit={uploadImage} className="md:grid md:grid-cols-2 md:gap-4 md:items-center">
+            <div>
+              <input className="input mb-3" placeholder="عنوان الصورة (اختياري)" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} />
+              <div className="mb-3">
+                <Dropzone
+                  accept="image/*"
+                  file={uFile}
+                  onPick={setUFile}
+                  label="① اختر الصورة (PNG، JPG، WebP، GIF)"
+                />
+              </div>
+              <div className="text-[11px] text-[var(--muted)] mb-3">PNG، JPG، WebP أو GIF حتى 50 ميغابايت. تُحظر الصور غير اللائقة آليًا.</div>
+            </div>
+            <div className="text-center md:text-left">
+              <button type="submit" className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الصورة'}</button>
+            </div>
+          </form>
+        </div>
       )}
 
       {/* مرشحات */}
@@ -255,7 +283,7 @@ export default function SubjectDetailPage() {
       </div>
 
       {visibleDocs.length === 0 ? (
-        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة ملفات» بالأعلى' : 'اضغط «إضافة ملفات» بالأعلى لرفع PDF أو وورد أو غيرهما'} />
+        <Empty title="لا توجد ملفات هنا" hint={cat ? 'لا ملفات في هذا التصنيف — اضغط «إضافة ملف» بالأعلى' : 'اضغط «إضافة ملف» بالأعلى لرفع PDF أو وورد أو غيرهما'} />
       ) : (
         <div className="space-y-2">
           {visibleDocs.map((f) => (
@@ -308,39 +336,15 @@ export default function SubjectDetailPage() {
       {/* الصور */}
       {subject && (
       <div className="mt-10">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
           <div>
             <h2 className="text-lg font-black flex items-center gap-2"><ImageIcon size={18} /> الصور</h2>
             <p className="text-xs text-[var(--muted)]">صور المقياس — تُفحص آليًا وتُمرر عبر مراجعة المشرف قبل النشر</p>
           </div>
-          <button className="btn btn-gold" onClick={() => setShowImageForm((v) => !v)}>
-            {showImageForm ? <X size={16} /> : <ImageIcon size={16} />} إضافة صورة
-          </button>
         </div>
 
-        {showImageForm && (
-          <form onSubmit={uploadImage} className="card p-4 mb-4 fade-up">
-            <div className="grid md:grid-cols-2 gap-3 mb-3">
-              <input className="input" placeholder="عنوان الصورة (اختياري)" value={uTitle} onChange={(e) => setUTitle(e.target.value)} />
-              {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-            <div className="text-xs text-[var(--muted)] mb-2">خطوات الإضافة: ① انقر على الصندوق واختر الصورة — ② العنوان اختياري — ③ اضغط «رفع الصورة»</div>
-            <div className="mb-3">
-              <Dropzone
-                accept="image/*"
-                file={uFile}
-                onPick={setUFile}
-                label="① اختر الصورة (PNG، JPG، WebP، GIF)"
-              />
-            </div>
-            </div>
-            {error && <div className="text-sm mb-3 text-[#ff9b94]">{error}</div>}
-            <div className="text-[11px] text-[var(--muted)] mb-3">PNG، JPG، WebP أو GIF حتى 50 ميغابايت. تُحظر الصور غير اللائقة آليًا.</div>
-            <button className="btn btn-gold" disabled={busy}>{busy ? <Spinner /> : 'رفع الصورة'}</button>
-          </form>
-        )}
-
         {images.length === 0 ? (
-          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة صورة» لرفع أول صورة للمقياس" />
+          <Empty title="لا توجد صور بعد" hint="اضغط «إضافة ملف» بالأعلى ثم اختر صورة" />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((f) => (

@@ -257,7 +257,7 @@ export default function RegisterPage() {
             </>
           )}
 
-          <button className="btn btn-gold w-full mt-2 py-2.5" disabled={!facultyId || busy} onClick={goBranch}>
+          <button className="btn btn-gold w-full mt-2 py-2.5" disabled={!facultyId || busy} onClick={() => setStep('level')}>
             متابعة إلى المستوى
           </button>
         </div>
